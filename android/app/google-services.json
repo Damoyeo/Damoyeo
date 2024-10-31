@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "219722659591",
+    "project_id": "test-project-a18d0",
+    "storage_bucket": "test-project-a18d0.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219722659591:android:bd61bbcdb601854ccf37a2",
+        "android_client_info": {
+          "package_name": "com.example.gomoph"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAM5OnmLOdR_H_6z-y5UG3WO3C0oQ2hq8g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
