@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:gomoph/tab/favorite/favorite_page.dart';
+import 'package:gomoph/tab/myActivity/MyActivity_page.dart';
 import 'package:gomoph/tab/postList/postList_page.dart';
 import 'package:gomoph/tab/search/search_page.dart';
 
@@ -16,10 +18,10 @@ class _TabPageState extends State<TabPage> {
   int _currentIndex = 0;
 
   final _pages = [
-    const HomePage(),
+    const FavoritePage(),
     const SearchPage(),
     const PostListPage(),
-    const AccountPage(),
+    const MyActivityPage(),
     const AccountPage(),
   ];
 
