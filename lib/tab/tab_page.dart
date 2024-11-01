@@ -5,7 +5,7 @@ import 'package:gomoph/tab/postList/postList_page.dart';
 import 'package:gomoph/tab/search/search_page.dart';
 
 import 'account/account_page.dart';
-import 'home/home_page.dart';
+
 
 class TabPage extends StatefulWidget {
   const TabPage({super.key});
