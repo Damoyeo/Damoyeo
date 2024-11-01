@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart'; // Cupertino 디자인 요소를 사용하기 위한 패키지
 import 'package:flutter/material.dart';  // Material 디자인 요소를 사용하기 위한 패키지
 
-class MyApp extends StatelessWidget {  // StatelessWidget을 상속받은 MyApp 클래스 정의
-  const MyApp({super.key});  // const 생성자, key는 위젯의 고유 식별자로 사용
+class PostListPage extends StatelessWidget {  // StatelessWidget을 상속받은 MyApp 클래스 정의
+  const PostListPage({super.key});  // const 생성자, key는 위젯의 고유 식별자로 사용
 
   @override
   Widget build(BuildContext context) {  // 화면을 빌드하는 함수
