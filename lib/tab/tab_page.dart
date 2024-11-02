@@ -3,6 +3,7 @@ import 'package:gomoph/tab/search/search_page.dart';
 
 import 'account/account_page.dart';
 import 'home/home_page.dart';
+import 'chat/chat_page.dart';
 
 class TabPage extends StatefulWidget {
   const TabPage({super.key});
@@ -14,10 +15,12 @@ class TabPage extends StatefulWidget {
 class _TabPageState extends State<TabPage> {
   int _currentIndex = 0;
 
+  //채팅 페이지 추가필요
   final _pages = [
     const HomePage(),
     const SearchPage(),
     const AccountPage(),
+    const ChatPage(),
   ];
 
   @override
@@ -44,6 +47,10 @@ class _TabPageState extends State<TabPage> {
             icon: Icon(Icons.person),
             label: 'Account',
           ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chat',
+          )
         ],
       ),
     );
