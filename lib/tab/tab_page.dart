@@ -28,6 +28,10 @@ class _TabPageState extends State<TabPage> {
     return Scaffold(
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.black, // 네비게이션 바 배경색 설정
+        selectedItemColor: Colors.blue, // 선택된 아이템 색상 설정
+        unselectedItemColor: Colors.grey, // 선택되지 않은 아이템 색상 설정
+        currentIndex: _currentIndex,
         onTap: (index) {  // 클릭 했을 때 해당 인덱스로 값이 변하면서 탭이 넘어감
           setState(() {
             currentIndex: _currentIndex;
@@ -50,7 +54,7 @@ class _TabPageState extends State<TabPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.chat),
             label: 'Chat',
-          )
+          ),
         ],
       ),
     );

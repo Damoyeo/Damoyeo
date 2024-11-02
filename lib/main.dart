@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:gomoph/tab/chat/chat_page.dart';
 import 'auth/auth_gate.dart'; // 로그인 화면으로 이동
 import 'firebase_options.dart'; // Firebase 설정
 
@@ -24,4 +25,15 @@ class MyApp extends StatelessWidget {
       home: const AuthGate(),
     );
   }
+
+  // @override
+  // Widget build(BuildContext context){
+  //   return MaterialApp(
+  //     title: 'Chat App',
+  //     theme: ThemeData(
+  //       primarySwatch: Color.blue,
+  //     ),
+  //     home: const ChatPage(),
+  //   );
+  // }
 }
