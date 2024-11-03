@@ -20,7 +20,7 @@ class _TabPageState extends State<TabPage> {
   final _pages = [
     const FavoritePage(),
     const SearchPage(),
-    const PostListPage(),
+    PostListPage(),
     const MyActivityPage(),
     const AccountPage(),
   ];
