@@ -78,49 +78,49 @@
 //   }
 // }
 
-
-
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../models/post.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+
+class PostListPage extends StatefulWidget {
+  const PostListPage({super.key});
+
+  @override
+  _PostListPageState createState() => _PostListPageState();
+}
 
 // 게시물 리스트 페이지
-class PostListPage extends StatelessWidget {
-  // 생성자 정의
-  PostListPage({super.key});
-
+class _PostListPageState extends State<PostListPage> {
   //----------------------------------------------------------------------------------------------------------- Firestore에 샘플 데이터를 추가하는 함수
   void addSampleDataToFirestore() {
     final collection = FirebaseFirestore.instance.collection('posts');
 
     final samplePosts = [
       Post(
-        id: '1',
-        title: '스터디 그룹 모집',
-        content: '열심히 공부할 스터디원들을 모집합니다!',
-        tag: '서울',
-        createdAt: DateTime.now(),
-        recruit: 5,
-        imageUrl: 'https://via.placeholder.com/150'
-      ),
+          id: '1',
+          title: '스터디 그룹 모집',
+          content: '열심히 공부할 스터디원들을 모집합니다!',
+          tag: '서울',
+          createdAt: DateTime.now(),
+          recruit: 5,
+          imageUrl: 'https://via.placeholder.com/150'),
       Post(
-        id: '2',
-        title: '축구 동호회 모집',
-        content: '매주 주말에 축구하실 분들을 구합니다.',
-        tag: '부산',
-        createdAt: DateTime.now(),
-        recruit: 10,
-        imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg'
-      ),
+          id: '2',
+          title: '축구 동호회 모집',
+          content: '매주 주말에 축구하실 분들을 구합니다.',
+          tag: '부산',
+          createdAt: DateTime.now(),
+          recruit: 10,
+          imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg'),
       Post(
-        id: '3',
-        title: '영화 동아리',
-        content: '영화 감상을 좋아하는 분들 모여주세요!',
-        tag: '대전',
-        createdAt: DateTime.now(),
-        recruit: 8,
-        imageUrl: 'https://source.unsplash.com/random/300x200'
-      ),
+          id: '3',
+          title: '영화 동아리',
+          content: '영화 감상을 좋아하는 분들 모여주세요!',
+          tag: '대전',
+          createdAt: DateTime.now(),
+          recruit: 8,
+          imageUrl: 'https://source.unsplash.com/random/300x200'),
       Post(
         id: '4',
         title: '등산 동호회',
@@ -198,84 +198,196 @@ class PostListPage extends StatelessWidget {
     for (var post in samplePosts) {
       collection.doc(post.id).set(post.toJson());
     }
-  }
+  } //샘플데이터
   //----------------------------------------------------------------------------------------------------------- Firestore에 샘플 데이터를 추가하는 함수
 
+  //좋아요 기능구현 -------------------------------------------------------------
+  // 특정 사용자가 게시물을 좋아요 했는지 여부 확인
+  Future<bool> _isLiked(String postId, String userId) async {
+    final favoriteRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('favorite')
+        .doc(userId);
+    final docSnapshot = await favoriteRef.get();
+    return docSnapshot.exists;
+  }
+
+  // 좋아요 추가/취소 기능
+  Future<void> _toggleFavorite(String postId, String userId) async {
+    final favoriteRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('favorite')
+        .doc(userId);
+
+    final isLiked = await _isLiked(postId, userId);
+
+    if (isLiked) {
+      // 좋아요 취소
+      await favoriteRef.delete();
+    } else {
+      // 좋아요 추가
+      await favoriteRef.set({
+        'user_id': userId,
+        'createdAt': Timestamp.now(),
+      });
+    }
+
+    setState(() {}); // 좋아요 상태 업데이트
+  }
+
+  //좋아요 기능구현 -------------------------------------------------------------
+
+  //---------------------------------------------------------------------------사용자 확인
+  // 현재 사용자의 ID 가져오기
+  String? getCurrentUserId() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.uid; // 로그인된 사용자의 UID를 반환 (로그인되지 않았으면 null)
+  }
+
+  //---------------------------------------------------------------------------사용자 확인
 
   // Firestore에서 'posts' 컬렉션의 데이터를 스트림 형태로 가져오는 변수
   final Stream<QuerySnapshot<Post>> postsStream = FirebaseFirestore.instance
-      .collection('posts')  // 'posts' 컬렉션을 선택
-      .withConverter<Post>(  // Firestore 데이터를 Post 객체로 변환
-    fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),  // Firestore의 JSON 데이터를 Post 객체로 변환
-    toFirestore: (post, _) => post.toJson(),  // Post 객체를 Firestore에 JSON 형식으로 변환하여 저장
-  )
-      .snapshots();  // 실시간으로 데이터 변화를 스트림 형태로 제공
+      .collection('posts') // 'posts' 컬렉션을 선택
+      .withConverter<Post>(
+        // Firestore 데이터를 Post 객체로 변환
+        fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),
+        // Firestore의 JSON 데이터를 Post 객체로 변환
+        toFirestore: (post, _) =>
+            post.toJson(), // Post 객체를 Firestore에 JSON 형식으로 변환하여 저장
+      )
+      .snapshots(); // 실시간으로 데이터 변화를 스트림 형태로 제공
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(  // 상단에 고정된 앱바(AppBar) 위젯
-        title: Text('모집 게시물'),  // 앱바의 제목을 '모집 게시물'로 설정
-        centerTitle: true,  // 제목을 가운데 정렬
+      appBar: AppBar(
+        // 상단에 고정된 앱바(AppBar) 위젯
+        title: Text('모집 게시물'), // 앱바의 제목을 '모집 게시물'로 설정
+        centerTitle: true, // 제목을 가운데 정렬
       ),
-      body: StreamBuilder<QuerySnapshot<Post>>(  // Firestore의 스트림 데이터를 감시하여 UI를 업데이트하는 StreamBuilder
-        stream: postsStream,  // postsStream 스트림을 연결하여 데이터 변화를 감시
+      body: StreamBuilder<QuerySnapshot<Post>>(
+        // Firestore의 스트림 데이터를 감시하여 UI를 업데이트하는 StreamBuilder
+        stream: postsStream, // postsStream 스트림을 연결하여 데이터 변화를 감시
         builder: (context, snapshot) {
-          if (snapshot.hasError) { //firebase연결이 안되어있는경우
+          if (snapshot.hasError) {
+            //firebase연결이 안되어있는경우
             return Center(child: Text('Firestore 연결 오류 발생'));
           }
 
           if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator()); // 데이터 로딩 중일 때 로딩 스피너를 화면 중앙에 표시
+            return Center(
+                child:
+                    CircularProgressIndicator()); // 데이터 로딩 중일 때 로딩 스피너를 화면 중앙에 표시
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
-            return Center(child: Text('게시물이 없습니다.')); // 데이터가 없을 때 "게시물이 없습니다." 메시지를 화면 중앙에 표시
+            return Center(
+                child: Text(
+                    '게시물이 없습니다.')); // 데이터가 없을 때 "게시물이 없습니다." 메시지를 화면 중앙에 표시
           }
 
           // Firestore에서 데이터를 성공적으로 가져왔을 때
-          final posts = snapshot.data!.docs.map((doc) => doc.data()).toList();  // 각 문서를 Post 객체로 변환하여 리스트로 저장
+          final posts = snapshot.data!.docs
+              .map((doc) => doc.data())
+              .toList(); // 각 문서를 Post 객체로 변환하여 리스트로 저장
 
-          return ListView.builder(  // 리스트 형태로 게시물을 표시하는 ListView.builder
-            itemCount: posts.length,  // 리스트 아이템 개수를 posts 리스트 길이로 설정
+          return ListView.builder(
+            // 리스트 형태로 게시물을 표시하는 ListView.builder
+            itemCount: posts.length, // 리스트 아이템 개수를 posts 리스트 길이로 설정
             itemBuilder: (context, index) {
-              final post = posts[index];  // 현재 인덱스의 Post 객체
+              final post = posts[index]; // 현재 인덱스의 Post 객체
+              final userId = getCurrentUserId();
 
-              return Card(  // 게시물 항목을 Card 위젯으로 감싸서 디자인 적용
-                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),  // 카드의 상하, 좌우 여백 설정
-                child: ListTile(  // Card 내부에 텍스트와 아이콘을 표시하는 ListTile 위젯
+              return Card(
+                // 게시물 항목을 Card 위젯으로 감싸서 디자인 적용
+                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                // 카드의 상하, 좌우 여백 설정
+                child: ListTile(
+                  // Card 내부에 텍스트와 아이콘을 표시하는 ListTile 위젯
 
-                //   leading: Container(  // 왼쪽에 위치한 이미지나 아이콘을 위한 컨테이너
-                //   width: 50.0,  // 컨테이너 너비
-                //   height: 50.0,  // 컨테이너 높이
-                //   color: Colors.grey[300],  // 배경 색상을 회색으로 설정
-                //   child: Icon(Icons.image, color: Colors.white),  // 흰색 아이콘을 추가하여 이미지 대체
-                // ),
-                  leading: Container(  // 왼쪽에 위치한 이미지나 아이콘을 위한 컨테이너
-                    width: 50.0,  // 컨테이너 너비
-                    height: 50.0,  // 컨테이너 높이
-                    color: Colors.grey[300],  // 배경 색상을 회색으로 설정
-                    child: post.imageUrl != null  // imageUrl이 있는지 확인
-                        ? Image.network(  // imageUrl이 있으면 해당 URL에서 이미지 불러오기
-                      post.imageUrl!,
-                      fit: BoxFit.cover,  // 이미지가 컨테이너에 맞도록 설정
-                    )
-                        : Icon(Icons.image, color: Colors.white),  // imageUrl이 없으면 기본 아이콘 표시
+                  //   leading: Container(  // 왼쪽에 위치한 이미지나 아이콘을 위한 컨테이너
+                  //   width: 50.0,  // 컨테이너 너비
+                  //   height: 50.0,  // 컨테이너 높이
+                  //   color: Colors.grey[300],  // 배경 색상을 회색으로 설정
+                  //   child: Icon(Icons.image, color: Colors.white),  // 흰색 아이콘을 추가하여 이미지 대체
+                  // ),
+                  leading: Container(
+                    // 왼쪽에 위치한 이미지나 아이콘을 위한 컨테이너
+                    width: 50.0, // 컨테이너 너비
+                    height: 50.0, // 컨테이너 높이
+                    color: Colors.grey[300], // 배경 색상을 회색으로 설정
+                    child: post.imageUrl != null // imageUrl이 있는지 확인
+                        ? Image.network(
+                            // imageUrl이 있으면 해당 URL에서 이미지 불러오기
+                            post.imageUrl!,
+                            fit: BoxFit.cover, // 이미지가 컨테이너에 맞도록 설정
+                          )
+                        : Icon(Icons.image,
+                            color: Colors.white), // imageUrl이 없으면 기본 아이콘 표시
                   ),
-
-                  title: Text(post.title),  // Firestore에서 가져온 게시물 제목을 표시
-                  subtitle: Column(  // 여러 줄로 설명을 표시하기 위해 Column 사용
-                    crossAxisAlignment: CrossAxisAlignment.start,  // 텍스트를 왼쪽 정렬
+                  title: Text(post.title),
+                  // Firestore에서 가져온 게시물 제목을 표시
+                  subtitle: Column(
+                    // 여러 줄로 설명을 표시하기 위해 Column 사용
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    // 텍스트를 왼쪽 정렬
                     children: [
-                      Text(post.content), // 게시물 내용을 표시
-                      Text('지역: ${post.tag}'), // 태그를 지역으로 표시
-                      Text('모집인원 ${post.recruit}'), // 모집 인원 표시 (예시, 실제 데이터에 맞게 수정 가능)
+                      Text(post.content),
+                      // 게시물 내용을 표시
+                      Text('지역: ${post.tag}'),
+                      // 태그를 지역으로 표시
+                      Text('모집인원 ${post.recruit}'),
+                      // 모집 인원 표시 (예시, 실제 데이터에 맞게 수정 가능)
                     ],
                   ),
-                  trailing: IconButton(  // 오른쪽에 위치한 좋아요 버튼
-                    icon: Icon(Icons.favorite_border),  // 좋아요를 나타내는 아이콘
-                    onPressed: () {  // 버튼 클릭 시 호출되는 콜백 함수
-                      // 좋아요 기능 구현 (추후 기능 추가 가능)
+                  // trailing: IconButton(  // 오른쪽에 위치한 좋아요 버튼
+                  //   icon: Icon(Icons.favorite_border),  // 좋아요를 나타내는 아이콘
+                  //--------------------------------------------------------------------------------------좋아요 기능구현
+                  //   onPressed: () {  // 버튼 클릭 시 호출되는 콜백 함수
+                  //
+                  //     Future<void> addFavorite(String postId, String userId) async {
+                  //       final favoriteRef = FirebaseFirestore.instance
+                  //           .collection('posts')
+                  //           .doc(postId)
+                  //           .collection('favorite')
+                  //           .doc(userId);  // 사용자 ID를 문서 ID로 사용
+                  //
+                  //       final docSnapshot = await favoriteRef.get();
+                  //
+                  //       if (!docSnapshot.exists) {
+                  //         // 사용자가 좋아요를 누르지 않은 경우에만 추가
+                  //         await favoriteRef.set({
+                  //           'user_id': userId,
+                  //           'createdAt': Timestamp.now(),  // 좋아요 누른 시간 저장 (옵션)
+                  //         });
+                  //       }
+                  //     }
+                  //   },
+                  //   //--------------------------------------------------------------------------------------좋아요 기능구현
+                  // ),
+                  trailing: FutureBuilder<bool>(
+                    future: userId != null
+                        ? _isLiked(post.id, userId!)
+                        : Future.value(false),
+                    builder: (context, snapshot) {
+                      bool isLiked = snapshot.data ?? false;
+                      return IconButton(
+                        icon: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: isLiked ? Colors.red : null,
+                        ),
+                        onPressed: () {
+                          if (userId != null) {
+                            _toggleFavorite(
+                                post.id, userId!); // userId가 null이 아닐 때만 호출
+                          } else {
+                            print("User not logged in");
+                          }
+                        },
+                      );
                     },
                   ),
                 ),
@@ -284,16 +396,14 @@ class PostListPage extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(  // 하단에 위치한 글 작성 버튼
-        onPressed: () {  // 버튼 클릭 시 호출되는 콜백 함수
-          addSampleDataToFirestore();  // 버튼이 눌릴 때 Firestore에 샘플 데이터를 추가
+      floatingActionButton: FloatingActionButton(
+        // 하단에 위치한 글 작성 버튼
+        onPressed: () {
+          // 버튼 클릭 시 호출되는 콜백 함수
+          addSampleDataToFirestore(); // 버튼이 눌릴 때 Firestore에 샘플 데이터를 추가
         },
-        child: Icon(Icons.edit),  // 버튼 아이콘으로 연필 모양 추가
+        child: Icon(Icons.edit), // 버튼 아이콘으로 연필 모양 추가
       ),
-
     );
   }
 }
-
-
-

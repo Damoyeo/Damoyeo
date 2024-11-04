@@ -16,3 +16,19 @@
 //   final postWithImageUrl = post.copyWith(imageUrl: imageUrl);  // imageUrl 추가
 //   await FirebaseFirestore.instance.collection('posts').doc(post.id).set(postWithImageUrl.toJson());
 // }
+
+
+
+//좋아요 개수 가져오기
+/*
+Future<int> getFavoriteCount(String postId) async {
+  final snapshot = await FirebaseFirestore.instance
+      .collection('posts')
+      .doc(postId)
+      .collection('favorite')
+      .get();
+
+  return snapshot.size;
+}
+
+ */

@@ -15,7 +15,7 @@ class TabPage extends StatefulWidget {
 }
 
 class _TabPageState extends State<TabPage> {
-  int _currentIndex = 0;
+  int _currentIndex = 3; //게시물리스트페이지가 가장먼제 나타나게
 
   final _pages = [
     const FavoritePage(),
