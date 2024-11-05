@@ -5,6 +5,8 @@ import 'package:gomoph/tab/postList/postList_page.dart';
 import 'package:gomoph/tab/search/search_page.dart';
 
 import 'account/account_page.dart';
+import 'home/home_page.dart';
+import 'chat/chat_page.dart';
 
 
 class TabPage extends StatefulWidget {
@@ -15,11 +17,12 @@ class TabPage extends StatefulWidget {
 }
 
 class _TabPageState extends State<TabPage> {
-  int _currentIndex = 3; //게시물리스트페이지가 가장먼제 나타나게
+  int _currentIndex = 2; //게시물리스트페이지가 가장먼제 나타나게
 
+  //채팅 페이지 추가필요
   final _pages = [
     const FavoritePage(),
-    const SearchPage(),
+    const ChatPage(),
     PostListPage(),
     const MyActivityPage(),
     const AccountPage(),
@@ -31,7 +34,6 @@ class _TabPageState extends State<TabPage> {
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
         type: BottomNavigationBarType.fixed, //네비게이션바를 5개 이상 띄우기위해 필요
-        
         currentIndex: _currentIndex,  // 현재 인덱스를 지정하여 활성화 상태를 표시
         onTap: (index) {  // 클릭했을 때 해당 인덱스로 값이 변하면서 탭이 넘어감
           setState(() {
@@ -58,6 +60,10 @@ class _TabPageState extends State<TabPage> {
           BottomNavigationBarItem(
             icon: Icon(Icons.person),
             label: '프로필',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.chat),
+            label: 'Chat',
           ),
         ],
       ),
