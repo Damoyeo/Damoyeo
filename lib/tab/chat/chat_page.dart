@@ -6,6 +6,8 @@ import 'chat_detail_page.dart';
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
 
+  //새로운 사용자와의 채팅방을 생성하거나 이전의 채팅방으로 참여하는 코드
+  //나중에 진호가 버튼만들면 이 함수로 채팅방을 생성하여야 한다.
   Future<String?> createOrGetChatRoom(String otherUserId) async {
     final FirebaseAuth _auth = FirebaseAuth.instance;
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -39,6 +41,7 @@ class ChatPage extends StatelessWidget {
       'users': [currentUserId, otherUserId],
       'lastMessage': '',
       'timestamp': FieldValue.serverTimestamp(),
+      'pinned': false, //기본값 추가
     });
 
     return chatRoomId;
@@ -110,6 +113,30 @@ class ChatPage extends StatelessWidget {
     );
   }
 
+  Future<void> pinChatRoom(String chatRoomId) async {
+    final _firestore = FirebaseFirestore.instance;
+    await _firestore.collection('chats').doc(chatRoomId).update({
+      'pinned': true,
+    });
+  }
+
+  Future<void> unpinChatRoom(String chatRoomId) async {
+    final _firestore = FirebaseFirestore.instance;
+    await _firestore.collection('chats').doc(chatRoomId).update({
+      'pinned': false,
+    });
+  }
+
+  Future<void> exitChatRoom(String chatRoomId) async {
+    final _firestore = FirebaseFirestore.instance;
+    final currentUser = FirebaseAuth.instance.currentUser;
+    if (currentUser == null) return;
+
+    await _firestore.collection('chats').doc(chatRoomId).update({
+      'users': FieldValue.arrayRemove([currentUser.uid]),
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -140,10 +167,12 @@ class ChatPage extends StatelessWidget {
               final lastMessage = chat['lastMessage'] ?? '';
               final otherUserId = (chat['users'] as List)
                   .firstWhere((id) => id != currentUser.uid);
+              final isPinned = chat['pinned'] ?? false;
 
               return ListTile(
                 title: Text("Chat with $otherUserId"),
                 subtitle: Text(lastMessage),
+                trailing: isPinned ? const Icon(Icons.push_pin) : null,
                 onTap: () {
                   Navigator.push(
                     context,
@@ -153,6 +182,38 @@ class ChatPage extends StatelessWidget {
                         otherUserId: otherUserId,
                       ),
                     ),
+                  );
+                },
+                onLongPress: () {
+                  showModalBottomSheet(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          ListTile(
+                            leading: const Icon(Icons.push_pin),
+                            title: Text(isPinned ? '채팅방 상단 고정 해제' : '채팅방 상단 고정'),
+                            onTap: () {
+                              Navigator.pop(context);
+                              if (isPinned) {
+                                unpinChatRoom(chatId);
+                              } else {
+                                pinChatRoom(chatId);
+                              }
+                            },
+                          ),
+                          ListTile(
+                            leading: const Icon(Icons.exit_to_app),
+                            title: const Text('채팅방 나가기'),
+                            onTap: () async {
+                              Navigator.pop(context);
+                              await exitChatRoom(chatId);
+                            },
+                          ),
+                        ],
+                      );
+                    },
                   );
                 },
               );
