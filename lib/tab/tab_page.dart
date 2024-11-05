@@ -61,10 +61,6 @@ class _TabPageState extends State<TabPage> {
             icon: Icon(Icons.person),
             label: '프로필',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.chat),
-            label: 'Chat',
-          ),
         ],
       ),
     );
