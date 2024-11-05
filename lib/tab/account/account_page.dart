@@ -1,7 +1,13 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
+
+  Future<void> _logout(BuildContext context) async {
+    await FirebaseAuth.instance.signOut(); // 로그아웃 수행
+    Navigator.of(context).pushReplacementNamed('/login'); // 로그인 페이지로 이동
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -9,13 +15,16 @@ class AccountPage extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Instagram Clone'),
         actions: [
-          IconButton(onPressed: () {}, icon: Icon(Icons.exit_to_app)),
+          IconButton(
+            onPressed: () => _logout(context), // 로그아웃 함수 호출
+            icon: Icon(Icons.exit_to_app),
+          ),
         ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween, // 균등한
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Column(
               children: [
