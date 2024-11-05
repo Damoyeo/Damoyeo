@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:gomoph/post/create_post.dart';
 import 'package:gomoph/post/post_detail.dart';
 import 'auth/auth_gate.dart'; // 로그인 화면으로 이동
 import 'firebase_options.dart'; // Firebase 설정
@@ -22,7 +23,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const PostDetail(),
+      home: const CreatePost(),
       //home: const AuthGate(),
     );
   }

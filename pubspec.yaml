@@ -45,6 +45,7 @@ dependencies:
   flutter_login: ^5.0.0
   smooth_page_indicator: ^1.2.0+3
 
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
