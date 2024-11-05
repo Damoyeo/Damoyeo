@@ -19,14 +19,7 @@ class TabPage extends StatefulWidget {
 class _TabPageState extends State<TabPage> {
   int _currentIndex = 2; //게시물리스트페이지가 가장먼제 나타나게
 
-  //채팅 페이지 추가필요
-  final _pages = [
-    const FavoritePage(),
-    const ChatPage(),
-    PostListPage(),
-    const MyActivityPage(),
-    const AccountPage(),
-  ];
+
 
   @override
   Widget build(BuildContext context) {
