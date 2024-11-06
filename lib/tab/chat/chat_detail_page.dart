@@ -22,20 +22,49 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
+  @override
+  void initState() {
+    super.initState();
+    markMessagesAsRead(); // 처음 진입 시 한 번 호출하여 기존 메시지 읽음 처리
+  }
+
+  // 상대방이 보낸 메시지를 읽음 상태로 변경
+  void markMessagesAsRead() async {
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
+
+    final unreadMessages = await _firestore
+        .collection('chats')
+        .doc(widget.chatId)
+        .collection('messages')
+        .where('senderId', isEqualTo: widget.otherUserId)
+        .where('isRead', isEqualTo: false)
+        .get();
+
+    for (var doc in unreadMessages.docs) {
+      doc.reference.update({'isRead': true});
+    }
+  }
+
   void _sendMessage() async {
     if (_controller.text.isNotEmpty) {
       final currentUser = _auth.currentUser;
       if (currentUser == null) return;
 
+      final customMessageId = "${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}";
+
       await _firestore
           .collection('chats')
           .doc(widget.chatId)
           .collection('messages')
-          .add({
+          .doc(customMessageId)
+          .set({
+        'messageId': customMessageId,
         'senderId': currentUser.uid,
         'senderName': currentUser.displayName ?? 'Unknown',
         'message': _controller.text,
         'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
       });
 
       await _firestore.collection('chats').doc(widget.chatId).update({
@@ -76,7 +105,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 }
 
                 final messages = snapshot.data!.docs;
-                String? previousDate;
+
+                // 새로운 메시지가 수신될 때마다 읽음 상태 업데이트
+                markMessagesAsRead();
 
                 return ListView.builder(
                   reverse: true,
@@ -86,23 +117,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     final message = messageData['message'];
                     final senderId = messageData['senderId'];
                     final timestamp = messageData['timestamp'] as Timestamp?;
+                    final isRead = messageData['isRead'] ?? false;
                     final isCurrentUser = senderId == _auth.currentUser!.uid;
 
-                    // 날짜 포맷 설정
+                    // 날짜 형식으로 변환
                     String messageDate = '';
                     if (timestamp != null) {
                       final date = timestamp.toDate();
                       messageDate = DateFormat('yyyy년 M월 d일').format(date);
                     }
 
-                    // 날짜가 바뀔 때마다 날짜 표시
+                    // 현재 메시지의 날짜가 이전 메시지와 다른 경우에만 날짜 표시
                     bool showDate = false;
-                    if (messageDate != previousDate) {
+                    if (index == messages.length - 1 ||
+                        DateFormat('yyyy년 M월 d일').format(
+                            (messages[index + 1]['timestamp'] as Timestamp).toDate()) !=
+                            messageDate) {
                       showDate = true;
-                      previousDate = messageDate;
                     }
 
                     return Column(
+                      crossAxisAlignment: isCurrentUser
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
                         if (showDate)
                           Padding(
@@ -116,8 +153,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                   ),
                                 ),
                                 Padding(
-                                  padding:
-                                  const EdgeInsets.symmetric(horizontal: 8.0),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                   child: Text(
                                     messageDate,
                                     style: TextStyle(
@@ -136,36 +172,54 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                               ],
                             ),
                           ),
-                        Align(
-                          alignment: isCurrentUser
-                              ? Alignment.centerRight
-                              : Alignment.centerLeft,
-                          child: Container(
-                            padding: const EdgeInsets.all(12),
-                            margin: const EdgeInsets.symmetric(
-                                vertical: 5, horizontal: 10),
-                            decoration: BoxDecoration(
-                              color: isCurrentUser
-                                  ? Colors.blue[100]
-                                  : Colors.grey[300],
-                              borderRadius: BorderRadius.only(
-                                topLeft: const Radius.circular(12),
-                                topRight: const Radius.circular(12),
-                                bottomLeft: isCurrentUser
-                                    ? const Radius.circular(12)
-                                    : const Radius.circular(0),
-                                bottomRight: isCurrentUser
-                                    ? const Radius.circular(0)
-                                    : const Radius.circular(12),
+                        Row(
+                          mainAxisAlignment: isCurrentUser
+                              ? MainAxisAlignment.end
+                              : MainAxisAlignment.start,
+                          children: [
+                            if (isCurrentUser && !isRead)
+                              Padding(
+                                padding: const EdgeInsets.only(right: 4.0),
+                                child: Text(
+                                  '1',
+                                  style: const TextStyle(
+                                    fontSize: 10,
+                                    color: Colors.grey,
+                                  ),
+                                ),
+                              ),
+                            Align(
+                              alignment: isCurrentUser
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                margin: const EdgeInsets.symmetric(
+                                    vertical: 5, horizontal: 10),
+                                decoration: BoxDecoration(
+                                  color: isCurrentUser
+                                      ? Colors.blue[100]
+                                      : Colors.grey[300],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(12),
+                                    topRight: const Radius.circular(12),
+                                    bottomLeft: isCurrentUser
+                                        ? const Radius.circular(12)
+                                        : const Radius.circular(0),
+                                    bottomRight: isCurrentUser
+                                        ? const Radius.circular(0)
+                                        : const Radius.circular(12),
+                                  ),
+                                ),
+                                child: Text(
+                                  message,
+                                  style: TextStyle(
+                                    color: isCurrentUser ? Colors.blue[900] : Colors.black,
+                                  ),
+                                ),
                               ),
                             ),
-                            child: Text(
-                              message,
-                              style: TextStyle(
-                                color: isCurrentUser ? Colors.blue[900] : Colors.black,
-                              ),
-                            ),
-                          ),
+                          ],
                         ),
                       ],
                     );
