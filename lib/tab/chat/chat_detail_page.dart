@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
+//commit test
 class ChatDetailPage extends StatefulWidget {
   final String chatId;
   final String otherUserId;
