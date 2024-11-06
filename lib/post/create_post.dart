@@ -3,7 +3,6 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:remedi_kopo/remedi_kopo.dart';
 
 class CreatePost extends StatefulWidget {
   const CreatePost({super.key});
