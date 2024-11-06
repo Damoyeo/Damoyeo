@@ -6,8 +6,6 @@ import 'chat_detail_page.dart';
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
 
-  //새로운 사용자와의 채팅방을 생성하거나 이전의 채팅방으로 참여하는 코드
-  //나중에 진호가 버튼만들면 이 함수로 채팅방을 생성하여야 한다.
   Future<String?> createOrGetChatRoom(String otherUserId) async {
     final FirebaseAuth _auth = FirebaseAuth.instance;
     final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -20,13 +18,11 @@ class ChatPage extends StatelessWidget {
 
     final String currentUserId = currentUser.uid;
 
-    // 기존 채팅방이 있는지 확인
     final chatQuery = await _firestore
         .collection('chats')
         .where('users', arrayContains: currentUserId)
         .get();
 
-    // 상대방의 UID가 포함된 기존 채팅방이 있으면 해당 채팅방 ID 반환
     for (var doc in chatQuery.docs) {
       List<dynamic> users = doc['users'];
       if (users.contains(otherUserId)) {
@@ -34,14 +30,13 @@ class ChatPage extends StatelessWidget {
       }
     }
 
-    // 기존 채팅방이 없다면 새로 생성
     String chatRoomId = _firestore.collection('chats').doc().id;
 
     await _firestore.collection('chats').doc(chatRoomId).set({
       'users': [currentUserId, otherUserId],
       'lastMessage': '',
       'timestamp': FieldValue.serverTimestamp(),
-      'pinned': false, //기본값 추가
+      'pinned': false,
     });
 
     return chatRoomId;
@@ -87,7 +82,7 @@ class ChatPage extends StatelessWidget {
                       return ListTile(
                         title: Text(userName),
                         onTap: () async {
-                          Navigator.pop(context); // 다이얼로그 닫기
+                          Navigator.pop(context);
                           final chatRoomId = await createOrGetChatRoom(userId);
                           if (chatRoomId != null) {
                             Navigator.push(
@@ -132,9 +127,19 @@ class ChatPage extends StatelessWidget {
     final currentUser = FirebaseAuth.instance.currentUser;
     if (currentUser == null) return;
 
+    // 현재 사용자를 채팅방에서 제거
     await _firestore.collection('chats').doc(chatRoomId).update({
       'users': FieldValue.arrayRemove([currentUser.uid]),
     });
+
+    // 채팅방에 남아있는 사용자가 없으면 채팅방 삭제
+    final updatedChatRoom = await _firestore.collection('chats').doc(chatRoomId).get();
+    if (updatedChatRoom.exists) {
+      final users = updatedChatRoom['users'] as List<dynamic>;
+      if (users.isEmpty) {
+        await _firestore.collection('chats').doc(chatRoomId).delete();
+      }
+    }
   }
 
   @override
@@ -147,7 +152,6 @@ class ChatPage extends StatelessWidget {
         title: const Text('채팅 목록'),
       ),
       body: StreamBuilder<QuerySnapshot>(
-        // 로그인한 사용자가 포함된 채팅방 목록 가져오기
         stream: FirebaseFirestore.instance
             .collection('chats')
             .where('users', arrayContains: currentUser!.uid)
@@ -165,9 +169,13 @@ class ChatPage extends StatelessWidget {
               final chat = chats[index];
               final chatId = chat.id;
               final lastMessage = chat['lastMessage'] ?? '';
-              final otherUserId = (chat['users'] as List)
-                  .firstWhere((id) => id != currentUser.uid);
+              final users = (chat['users'] as List).where((id) => id != currentUser.uid).toList();
+              final otherUserId = users.isNotEmpty ? users.first : null;
               final isPinned = chat['pinned'] ?? false;
+
+              if (otherUserId == null) {
+                return const SizedBox.shrink(); // 다른 사용자가 없을 때 빈 위젯을 반환
+              }
 
               return ListTile(
                 title: Text("Chat with $otherUserId"),
@@ -222,7 +230,7 @@ class ChatPage extends StatelessWidget {
         },
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => showUserListDialog(context), // 사용자 목록 다이얼로그 열기
+        onPressed: () => showUserListDialog(context),
         child: const Icon(Icons.chat),
       ),
     );
