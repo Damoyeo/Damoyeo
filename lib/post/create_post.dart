@@ -2,8 +2,8 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:gomoph/models//create_model.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:remedi_kopo/remedi_kopo.dart';
 
 class CreatePost extends StatefulWidget {
   const CreatePost({super.key});
@@ -13,6 +13,40 @@ class CreatePost extends StatefulWidget {
 }
 
 class _CreatePostState extends State<CreatePost> {
+  final model = new CreateModel();
+
+  ////////////////////////////////////////////////////////// firebase에 넣을 변수들, 컨트롤러들
+  final _titleTextController = TextEditingController(); //제목 컨트롤러
+  int? _selectedCategoryIndex; // 선택된 카테고리의 인덱스
+  List<String> categories = [
+    '친목',
+    '스포츠',
+    '스터디',
+    '여행',
+    '알바',
+    '게임',
+    '봉사',
+    '헬스',
+    '음악',
+    '기타'
+  ];
+  String? _localSelectedValue; //지역 드롭다운버튼 값
+  final _addressTextController = TextEditingController(); //활동장소 컨트롤러
+  final _costTextController = TextEditingController(); //예상 활동금액 컨트롤러
+  String? _limitSelectedValue; //불참 횟수 드롭다운버튼 값
+  final _contentTextController = TextEditingController(); //게시글 내용 컨트롤러
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    _titleTextController.dispose();
+    _addressTextController.dispose();
+    _costTextController.dispose();
+    _contentTextController.dispose();
+    super.dispose();
+  }
+  //////////////////////////////////////////////////////////
+
   final ImagePicker _picker = ImagePicker();
   List<XFile?> _images = []; // 업로드된 이미지 목록
 
@@ -33,20 +67,13 @@ class _CreatePostState extends State<CreatePost> {
     }
   }
 
-  int? _selectedCategoryIndex; // 선택된 카테고리의 인덱스
+  List<File> convertXFilesToFiles(List<XFile?> xFiles) {
+    return xFiles
+        .where((xfile) => xfile != null) // null 필터링
+        .map((xfile) => File(xfile!.path))
+        .toList();
+  }
 
-  List<String> categories = [
-    '친목',
-    '스포츠',
-    '스터디',
-    '여행',
-    '알바',
-    '게임',
-    '봉사',
-    '헬스',
-    '음악',
-    '기타'
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -139,6 +166,7 @@ class _CreatePostState extends State<CreatePost> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             TextField(
+              controller: _titleTextController,
               decoration: InputDecoration(
                 hintText: 'Tell us everything.',
                 border: OutlineInputBorder(),
@@ -167,16 +195,22 @@ class _CreatePostState extends State<CreatePost> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             DropdownButtonFormField<String>(
+              value: _localSelectedValue,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
               ),
               items: ['서울특별시', '부산광역시', '대구광역시']
-                  .map((String value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(value),
-                      ))
+                  .map((String value) =>
+                  DropdownMenuItem(
+                    value: value,
+                    child: Text(value),
+                  ))
                   .toList(),
-              onChanged: (String? newValue) {},
+              onChanged: (String? newValue) {
+                setState(() {
+                  _localSelectedValue = newValue; // 선택된 값 업데이트
+                });
+              },
             ),
             SizedBox(height: 16),
             Text(
@@ -188,6 +222,7 @@ class _CreatePostState extends State<CreatePost> {
               children: [
                 Expanded(
                   child: TextField(
+                    controller: _addressTextController,
                     readOnly: true,
                     decoration: InputDecoration(
                       hintText: 'Tell us everything.',
@@ -217,6 +252,7 @@ class _CreatePostState extends State<CreatePost> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             TextField(
+              controller: _costTextController,
               decoration: InputDecoration(
                 hintText: 'Tell us everything.',
                 border: OutlineInputBorder(),
@@ -228,22 +264,29 @@ class _CreatePostState extends State<CreatePost> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             DropdownButtonFormField<String>(
+              value:_limitSelectedValue,
               decoration: InputDecoration(
                 border: OutlineInputBorder(),
               ),
               items: ['1회', '2회', '3회', '무제한']
-                  .map((String value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(value),
-                      ))
+                  .map((String value) =>
+                  DropdownMenuItem(
+                    value: value,
+                    child: Text(value),
+                  ))
                   .toList(),
-              onChanged: (String? newValue) {},
+              onChanged: (String? newValue) {
+                setState(() {
+                  _limitSelectedValue = newValue; // 선택된 값 업데이트
+                });
+              },
             ),
             SizedBox(height: 16),
             Text('Anything else?',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             TextField(
+              controller: _contentTextController,
               decoration: InputDecoration(
                 hintText: 'Tell us everything.',
                 border: OutlineInputBorder(),
@@ -257,6 +300,8 @@ class _CreatePostState extends State<CreatePost> {
                 child: ElevatedButton(
                   onPressed: () {
                     // 작성 완료 기능 추가
+                    if(_localSelectedValue != null && _titleTextController.text.isNotEmpty && _contentTextController.text.isNotEmpty )
+                    model.uploadPost( _titleTextController.text, _contentTextController.text, _localSelectedValue!, 15, DateTime.now(), 'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',convertXFilesToFiles(_images));
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),

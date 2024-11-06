@@ -44,8 +44,8 @@ dependencies:
   firebase_ui_oauth_google: ^1.0.21
   flutter_login: ^5.0.0
   smooth_page_indicator: ^1.2.0+3
-  remedi_kopo: ^0.0.2
   cloud_firestore: ^5.4.4
+  firebase_storage: ^12.3.4
 
 dev_dependencies:
   flutter_test:

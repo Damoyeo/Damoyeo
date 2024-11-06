@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
 class Post {
   String id;
@@ -7,7 +8,8 @@ class Post {
   String tag;
   int recruit;
   DateTime createdAt;
-  String imageUrl;  // 이미지 URL 필드 추가 (nullable)
+  String imageUrl;// 이미지 URL 필드 추가 (nullable)
+  List<String> imageUrls;
 
   Post({
     required this.id,
@@ -16,7 +18,8 @@ class Post {
     required this.tag,
     required this.createdAt,
     required this.recruit,
-    required this.imageUrl,  // 생성자에 imageUrl 추가
+    required this.imageUrl,
+    required this.imageUrls, // 생성자에 imageUrl 추가
   });
 
   // Firestore 데이터를 Post 객체로 변환
@@ -28,7 +31,8 @@ class Post {
       tag: json['tag'] as String,
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       recruit: json['recruit'] as int,
-      imageUrl: json['imageUrl'] as String,  // imageUrl 필드 추가
+      imageUrl: json['imageUrl'] as String,
+      imageUrls: List<String>.from(json['imageUrls'] ?? []), // 안전하게 리스트 변환
     );
   }
 
@@ -41,7 +45,8 @@ class Post {
       'tag': tag,
       'createdAt': Timestamp.fromDate(createdAt),
       'recruit': recruit,
-      'imageUrl': imageUrl,  // imageUrl 필드 추가
+      'imageUrl': imageUrl,
+      'imageUrls': imageUrls// imageUrl 필드 추가
     };
   }
 }

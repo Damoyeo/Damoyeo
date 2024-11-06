@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
+import '../models/post.dart';
+
 class PostDetail extends StatefulWidget {
-  const PostDetail({super.key});
+  final Post post; // 전달받은 post 객체를 저장할 변수
+
+  const PostDetail({super.key, required this.post});
 
   @override
   State<PostDetail> createState() => _PostDetailState();
