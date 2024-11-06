@@ -3,6 +3,8 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:remedi_kopo/remedi_kopo.dart';
+
 class CreatePost extends StatefulWidget {
   const CreatePost({super.key});
 
@@ -30,6 +32,7 @@ class _CreatePostState extends State<CreatePost> {
       });
     }
   }
+
   int? _selectedCategoryIndex; // 선택된 카테고리의 인덱스
 
   List<String> categories = [
@@ -49,7 +52,14 @@ class _CreatePostState extends State<CreatePost> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () {
+            Navigator.pop(context); // 뒤로가기 기능 추가
+          },
+        ),
         title: Text('모집글 작성'),
+        centerTitle: true, // 제목을 중앙에 배치
       ),
       body: SingleChildScrollView(
         padding: EdgeInsets.all(16),
@@ -80,7 +90,8 @@ class _CreatePostState extends State<CreatePost> {
                               onTap: () {
                                 // 갤러리에서 사진 선택 기능 추가
                                 Navigator.pop(context);
-                                _pickImage(ImageSource.gallery); // 갤러리에서 이미지 선택// 카메라에서 이미지 선택
+                                _pickImage(ImageSource
+                                    .gallery); // 갤러리에서 이미지 선택// 카메라에서 이미지 선택
                               },
                             ),
                           ],
@@ -168,14 +179,38 @@ class _CreatePostState extends State<CreatePost> {
               onChanged: (String? newValue) {},
             ),
             SizedBox(height: 16),
-            Text('활동 장소',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+            Text(
+              '활동 장소',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
             SizedBox(height: 8),
-            TextField(
-              decoration: InputDecoration(
-                hintText: 'Tell us everything.',
-                border: OutlineInputBorder(),
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    readOnly: true,
+                    decoration: InputDecoration(
+                      hintText: 'Tell us everything.',
+                      border: OutlineInputBorder(),
+                    ),
+                  ),
+                ),
+                SizedBox(width: 8),
+                ElevatedButton(
+                  onPressed: () {},
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    backgroundColor: Colors.blue,
+                  ),
+                  child: Text(
+                    '주소찾기',
+                    style: TextStyle(color: Colors.white, fontSize: 14),
+                  ),
+                ),
+              ],
             ),
             SizedBox(height: 16),
             Text('예상 활동 금액',
@@ -217,17 +252,23 @@ class _CreatePostState extends State<CreatePost> {
             ),
             SizedBox(height: 24),
             Center(
-              child: ElevatedButton(
-                onPressed: () {
-                  // 작성 완료 기능 추가
-                },
-                style: ElevatedButton.styleFrom(
-                  padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
-                  backgroundColor: Colors.blue,
-                ),
-                child: Text(
-                  '작성완료',
-                  style: TextStyle(fontSize: 16, color: Colors.white),
+              child: SizedBox(
+                width: double.infinity, // 화면 너비에 맞춰서 버튼을 꽉 차게 설정
+                child: ElevatedButton(
+                  onPressed: () {
+                    // 작성 완료 기능 추가
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    backgroundColor: Colors.blue,
+                  ),
+                  child: Text(
+                    '작성완료',
+                    style: TextStyle(fontSize: 16, color: Colors.white),
+                  ),
                 ),
               ),
             ),
