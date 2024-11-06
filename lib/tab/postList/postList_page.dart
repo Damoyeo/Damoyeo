@@ -80,6 +80,8 @@
 
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:gomoph/post/create_post.dart';
+import 'package:gomoph/post/post_detail.dart';
 import '../../models/post.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
@@ -93,112 +95,112 @@ class PostListPage extends StatefulWidget {
 // 게시물 리스트 페이지
 class _PostListPageState extends State<PostListPage> {
   //----------------------------------------------------------------------------------------------------------- Firestore에 샘플 데이터를 추가하는 함수
-  void addSampleDataToFirestore() {
-    final collection = FirebaseFirestore.instance.collection('posts');
-
-    final samplePosts = [
-      Post(
-          id: '1',
-          title: '스터디 그룹 모집',
-          content: '열심히 공부할 스터디원들을 모집합니다!',
-          tag: '서울',
-          createdAt: DateTime.now(),
-          recruit: 5,
-          imageUrl: 'https://via.placeholder.com/150'),
-      Post(
-          id: '2',
-          title: '축구 동호회 모집',
-          content: '매주 주말에 축구하실 분들을 구합니다.',
-          tag: '부산',
-          createdAt: DateTime.now(),
-          recruit: 10,
-          imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg'),
-      Post(
-          id: '3',
-          title: '영화 동아리',
-          content: '영화 감상을 좋아하는 분들 모여주세요!',
-          tag: '대전',
-          createdAt: DateTime.now(),
-          recruit: 8,
-          imageUrl: 'https://source.unsplash.com/random/300x200'),
-      Post(
-        id: '4',
-        title: '등산 동호회',
-        content: '산을 좋아하시는 분들 함께해요.',
-        tag: '강원',
-        createdAt: DateTime.now(),
-        recruit: 7,
-        imageUrl: 'https://source.unsplash.com/random/300x200?hiking',
-      ),
-      Post(
-        id: '5',
-        title: '요가 모임',
-        content: '함께 요가를 즐길 분들 모집합니다.',
-        tag: '인천',
-        createdAt: DateTime.now(),
-        recruit: 6,
-        imageUrl: 'https://source.unsplash.com/random/300x200?yoga',
-      ),
-      Post(
-        id: '6',
-        title: '프로그래밍 스터디',
-        content: '프로그래밍에 관심 있는 분들 환영합니다!',
-        tag: '서울',
-        createdAt: DateTime.now(),
-        recruit: 4,
-        imageUrl: 'https://source.unsplash.com/random/300x200?programming',
-      ),
-      Post(
-        id: '7',
-        title: '독서 모임',
-        content: '다양한 책을 함께 읽어요!',
-        tag: '대구',
-        createdAt: DateTime.now(),
-        recruit: 12,
-        imageUrl: 'https://source.unsplash.com/random/300x200?reading',
-      ),
-      Post(
-        id: '8',
-        title: '사진 촬영 모임',
-        content: '사진 촬영을 좋아하시는 분들 모여요!',
-        tag: '광주',
-        createdAt: DateTime.now(),
-        recruit: 5,
-        imageUrl: 'https://source.unsplash.com/random/300x200?photography',
-      ),
-      Post(
-        id: '9',
-        title: '여행 동호회',
-        content: '국내외 여행을 함께할 분들을 찾습니다!',
-        tag: '부산',
-        createdAt: DateTime.now(),
-        recruit: 15,
-        imageUrl: 'https://source.unsplash.com/random/300x200?travel',
-      ),
-      Post(
-        id: '10',
-        title: '요리 모임',
-        content: '다양한 요리를 함께 만들어봐요!',
-        tag: '서울',
-        createdAt: DateTime.now(),
-        recruit: 6,
-        imageUrl: 'https://source.unsplash.com/random/300x200?cooking',
-      ),
-      Post(
-        id: '11',
-        title: '악기 연주 모임',
-        content: '다양한 악기를 연주하실 분들 모여주세요!',
-        tag: '대전',
-        createdAt: DateTime.now(),
-        recruit: 10,
-        imageUrl: 'https://source.unsplash.com/random/300x200?music',
-      ),
-    ];
-
-    for (var post in samplePosts) {
-      collection.doc(post.id).set(post.toJson());
-    }
-  } //샘플데이터
+  // void addSampleDataToFirestore() {
+  //   final collection = FirebaseFirestore.instance.collection('posts');
+  //
+  //   final samplePosts = [
+  //     Post(
+  //         id: '1',
+  //         title: '스터디 그룹 모집',
+  //         content: '열심히 공부할 스터디원들을 모집합니다!',
+  //         tag: '서울',
+  //         createdAt: DateTime.now(),
+  //         recruit: 5,
+  //         imageUrl: 'https://via.placeholder.com/150'),
+  //     Post(
+  //         id: '2',
+  //         title: '축구 동호회 모집',
+  //         content: '매주 주말에 축구하실 분들을 구합니다.',
+  //         tag: '부산',
+  //         createdAt: DateTime.now(),
+  //         recruit: 10,
+  //         imageUrl: 'https://randomuser.me/api/portraits/men/1.jpg'),
+  //     Post(
+  //         id: '3',
+  //         title: '영화 동아리',
+  //         content: '영화 감상을 좋아하는 분들 모여주세요!',
+  //         tag: '대전',
+  //         createdAt: DateTime.now(),
+  //         recruit: 8,
+  //         imageUrl: 'https://source.unsplash.com/random/300x200'),
+  //     Post(
+  //       id: '4',
+  //       title: '등산 동호회',
+  //       content: '산을 좋아하시는 분들 함께해요.',
+  //       tag: '강원',
+  //       createdAt: DateTime.now(),
+  //       recruit: 7,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?hiking',
+  //     ),
+  //     Post(
+  //       id: '5',
+  //       title: '요가 모임',
+  //       content: '함께 요가를 즐길 분들 모집합니다.',
+  //       tag: '인천',
+  //       createdAt: DateTime.now(),
+  //       recruit: 6,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?yoga',
+  //     ),
+  //     Post(
+  //       id: '6',
+  //       title: '프로그래밍 스터디',
+  //       content: '프로그래밍에 관심 있는 분들 환영합니다!',
+  //       tag: '서울',
+  //       createdAt: DateTime.now(),
+  //       recruit: 4,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?programming',
+  //     ),
+  //     Post(
+  //       id: '7',
+  //       title: '독서 모임',
+  //       content: '다양한 책을 함께 읽어요!',
+  //       tag: '대구',
+  //       createdAt: DateTime.now(),
+  //       recruit: 12,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?reading',
+  //     ),
+  //     Post(
+  //       id: '8',
+  //       title: '사진 촬영 모임',
+  //       content: '사진 촬영을 좋아하시는 분들 모여요!',
+  //       tag: '광주',
+  //       createdAt: DateTime.now(),
+  //       recruit: 5,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?photography',
+  //     ),
+  //     Post(
+  //       id: '9',
+  //       title: '여행 동호회',
+  //       content: '국내외 여행을 함께할 분들을 찾습니다!',
+  //       tag: '부산',
+  //       createdAt: DateTime.now(),
+  //       recruit: 15,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?travel',
+  //     ),
+  //     Post(
+  //       id: '10',
+  //       title: '요리 모임',
+  //       content: '다양한 요리를 함께 만들어봐요!',
+  //       tag: '서울',
+  //       createdAt: DateTime.now(),
+  //       recruit: 6,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?cooking',
+  //     ),
+  //     Post(
+  //       id: '11',
+  //       title: '악기 연주 모임',
+  //       content: '다양한 악기를 연주하실 분들 모여주세요!',
+  //       tag: '대전',
+  //       createdAt: DateTime.now(),
+  //       recruit: 10,
+  //       imageUrl: 'https://source.unsplash.com/random/300x200?music',
+  //     ),
+  //   ];
+  //
+  //   for (var post in samplePosts) {
+  //     collection.doc(post.id).set(post.toJson());
+  //   }
+  // } //샘플데이터
   //----------------------------------------------------------------------------------------------------------- Firestore에 샘플 데이터를 추가하는 함수
 
   //좋아요 기능구현 -------------------------------------------------------------
@@ -390,6 +392,14 @@ class _PostListPageState extends State<PostListPage> {
                       );
                     },
                   ),
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => PostDetail(post: post), // 전환할 화면
+                      ),
+                    );
+                  },
                 ),
               );
             },
@@ -400,7 +410,11 @@ class _PostListPageState extends State<PostListPage> {
         // 하단에 위치한 글 작성 버튼
         onPressed: () {
           // 버튼 클릭 시 호출되는 콜백 함수
-          addSampleDataToFirestore(); // 버튼이 눌릴 때 Firestore에 샘플 데이터를 추가
+          //addSampleDataToFirestore();
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => CreatePost()),
+          );// 버튼이 눌릴 때 Firestore에 샘플 데이터를 추가
         },
         child: Icon(Icons.edit), // 버튼 아이콘으로 연필 모양 추가
       ),
