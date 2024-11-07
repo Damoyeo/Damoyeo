@@ -58,7 +58,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       }, SetOptions(merge: true)); // 새로운 데이터만 업데이트하는 기능
       // 저장 성공 시, 이전 화면으로 이동
       // 성공 메시지를 포함
-      Navigator.pop(context, 'Profile updated successfully');
+      Navigator.pop(context, '프로필이 업데이트되었습니다.');
 
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -90,6 +90,50 @@ class _EditProfilePageState extends State<EditProfilePage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
+            Column(
+              children: [
+                Stack(
+                  children: [
+                    const SizedBox(
+                      width: 80,
+                      height: 80,
+                      child: CircleAvatar(
+                        backgroundImage: NetworkImage(
+                            'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'),
+                      ),
+                    ),
+                    Container(
+                      width: 80,
+                      height: 80,
+                      alignment: Alignment.bottomRight,
+                      child: const Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: FloatingActionButton(
+                              onPressed: null,
+                              backgroundColor: Colors.white,
+                              child: Icon(Icons.edit),
+                            ),
+                          ),
+                          SizedBox(
+                            width: 25,
+                            height: 25,
+                            child: FloatingActionButton(
+                              onPressed: null,
+                              child: Icon(Icons.edit),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
             TextField(
               controller: _nameController,
               decoration: InputDecoration(labelText: '이름'),
