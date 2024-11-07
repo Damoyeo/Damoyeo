@@ -321,10 +321,10 @@ class _PostListPageState extends State<PostListPage> {
                     width: 50.0, // 컨테이너 너비
                     height: 50.0, // 컨테이너 높이
                     color: Colors.grey[300], // 배경 색상을 회색으로 설정
-                    child: post.imageUrl != null // imageUrl이 있는지 확인
+                    child: post.imageUrls.isNotEmpty // imageUrl이 있는지 확인
                         ? Image.network(
                             // imageUrl이 있으면 해당 URL에서 이미지 불러오기
-                            post.imageUrl!,
+                            post.imageUrls[0]!,
                             fit: BoxFit.cover, // 이미지가 컨테이너에 맞도록 설정
                           )
                         : Icon(Icons.image,

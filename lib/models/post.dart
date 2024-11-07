@@ -10,6 +10,10 @@ class Post {
   DateTime createdAt;
   String imageUrl;// 이미지 URL 필드 추가 (nullable)
   List<String> imageUrls;
+  String address;
+  String detailAddress;
+  String category;
+  int cost;
 
   Post({
     required this.id,
@@ -20,6 +24,10 @@ class Post {
     required this.recruit,
     required this.imageUrl,
     required this.imageUrls, // 생성자에 imageUrl 추가
+    required this.address,
+    required this.detailAddress,
+    required this.category,
+    required this.cost
   });
 
   // Firestore 데이터를 Post 객체로 변환
@@ -33,6 +41,10 @@ class Post {
       recruit: json['recruit'] as int,
       imageUrl: json['imageUrl'] as String,
       imageUrls: List<String>.from(json['imageUrls'] ?? []), // 안전하게 리스트 변환
+      address: json['address'] as String? ?? 'Unknown address', // 기본값 설정
+      detailAddress: json['detailAddress'] as String? ?? 'Unknown detail address', // 기본값 설정
+      category: json['category'] as String? ?? 'General', // 기본값 설정
+      cost: json['cost'] as int? ?? 0, // 기본값 설정
     );
   }
 
@@ -46,7 +58,11 @@ class Post {
       'createdAt': Timestamp.fromDate(createdAt),
       'recruit': recruit,
       'imageUrl': imageUrl,
-      'imageUrls': imageUrls// imageUrl 필드 추가
+      'imageUrls': imageUrls,// imageUrl 필드 추가
+      'address': address,
+      'detailAddress': detailAddress,
+      'category': category,
+      'cost': cost
     };
   }
 }
