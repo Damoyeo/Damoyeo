@@ -17,7 +17,7 @@ class AuthGate extends StatelessWidget {
         } else if (snapshot.hasData) {
           return const TabPage(); // 인증된 경우 메인 화면으로 이동
         } else {
-          return const LoginScreen(); // 인증되지 않은 경우 로그인 화면 표시
+          return LoginScreen(); // 인증되지 않은 경우 로그인 화면 표시
         }
       },
     );
