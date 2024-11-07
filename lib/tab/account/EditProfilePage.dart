@@ -76,11 +76,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         // Firestore에 URL 업데이트
         await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'nickname': _nicknameController.text,
+          'phone': _phoneNumController.text,
           'profile_image': downloadURL,
-        }, SetOptions(merge: true));
+        }, SetOptions(merge: true));  // 새로운 데이터만 업데이트하는 기능
       }
 
-      Navigator.pop(context, '프로필이 업데이트되었습니다.');
+      // 저장 성공 시, 이전 화면으로 이동
+      Navigator.pop(context, true);
     } on FirebaseException catch (e) {
       print("Error updating profile: ${e.message}");
       ScaffoldMessenger.of(context).showSnackBar(
@@ -90,38 +93,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
       setState(() {
         _isLoading = false;
       });
-    }
-  }
-
-  // Firebase Storage에 이미지 업로드 후 다운로드 URL 반환
-  Future<String?> _uploadImageToStorage(XFile imageFile) async {
-    try {
-      final user = _auth.currentUser;
-      if (user == null) return null;
-
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('profile_images')
-          .child('${user.uid}_profile.jpg');
-
-      // 이미지 파일을 업로드
-      //final uploagdTask = await storageRef.putFile(File(imageFile.path));
-
-      final uploadTask = await storageRef.putFile(File(imageFile.path));
-      if (uploadTask.state == TaskState.success) {
-        final downloadURL = await uploadTask.ref.getDownloadURL();
-        print("Image uploaded successfully. URL: $downloadURL");
-      } else {
-        print("Image upload failed.");
-        return null;
-      }
-
-      // 다운로드 URL을 반환
-      //print("ImageUrl==================================================================" + ImageUrl);
-
-    } catch (e) {
-      print('Error uploading image: $e');
-      return null;
     }
   }
 
@@ -147,6 +118,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       } else {
         setState(() {
           _images.add(image);
+          _profileImageFile = image;  // 선택한 이미지를 프로필 이미지로 설정
           print("Image selected: ${image.path}");  // 이미지 경로 출력
         });
       }

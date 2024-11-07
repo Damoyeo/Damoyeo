@@ -4,21 +4,36 @@ import 'package:flutter/material.dart';
 
 import 'EditProfilePage.dart';
 
-class AccountPage extends StatelessWidget {
+class AccountPage extends StatefulWidget {
   const AccountPage({super.key});
+
+  @override
+  _AccountPageState createState() => _AccountPageState();
+}
+
+class _AccountPageState extends State<AccountPage> {
+  String? _profileImageUrl; // 현재 프로필 이미지 URL
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserProfileImageUrl();
+  }
+
+  // Firestore에서 프로필 이미지 URL을 로드
+  Future<void> _loadUserProfileImageUrl() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      setState(() {
+        _profileImageUrl = doc.data()?['profile_image'];
+      });
+    }
+  }
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut(); // 로그아웃 수행
     Navigator.of(context).pushReplacementNamed('/login'); // 로그인 페이지로 이동
-  }
-
-  Future<String?> _getUserProfileImageUrl() async {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user != null) {
-      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
-      return doc.data()?['profile_image']; // profile_image 필드 반환
-    }
-    return null;
   }
 
   @override
@@ -44,36 +59,16 @@ class AccountPage extends StatelessWidget {
                   children: [
                     Stack(
                       children: [
-                        FutureBuilder<String?>(
-                          future: _getUserProfileImageUrl(),
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState == ConnectionState.waiting) {
-                              return const SizedBox(
-                                width: 80,
-                                height: 80,
-                                child: CircleAvatar(
-                                  backgroundColor: Colors.grey,
-                                ),
-                              );
-                            }
-                            if (snapshot.hasData && snapshot.data != null) {
-                              return SizedBox(
-                                width: 80,
-                                height: 80,
-                                child: CircleAvatar(
-                                  backgroundImage: NetworkImage(snapshot.data!),
-                                ),
-                              );
-                            }
-                            return const SizedBox(
-                              width: 80,
-                              height: 80,
-                              child: CircleAvatar(
-                                backgroundImage: NetworkImage(
-                                    'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'), // 기본 이미지
-                              ),
-                            );
-                          },
+                        SizedBox(
+                          width: 80,
+                          height: 80,
+                          child: CircleAvatar(
+                            backgroundImage: _profileImageUrl != null
+                                ? NetworkImage(_profileImageUrl!)
+                                : const NetworkImage(
+                                'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'), // 기본 이미지
+                            backgroundColor: Colors.grey,
+                          ),
                         ),
                       ],
                     ),
@@ -125,7 +120,7 @@ class AccountPage extends StatelessWidget {
                 ),
               ],
             ),
-            Divider(height: 32), // 구분선 추가
+            const Divider(height: 32), // 구분선 추가
             Expanded(
               child: ListView(
                 children: [
@@ -138,9 +133,13 @@ class AccountPage extends StatelessWidget {
                         MaterialPageRoute(builder: (context) => EditProfilePage()),
                       );
 
-                      if (result != null) {
+                      // 프로필 정보가 갱신되었을 경우에만 이미지 즉시 다시 로드
+                      if (result == true) {
+                        setState(() {
+                          _loadUserProfileImageUrl(); // 프로필 이미지 갱신
+                        });
                         ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(content: Text(result.toString())),
+                          SnackBar(content: Text('프로필이 업데이트되었습니다.')),
                         );
                       }
                     },
