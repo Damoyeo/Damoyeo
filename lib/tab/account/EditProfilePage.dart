@@ -1,6 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -71,6 +72,54 @@ class _EditProfilePageState extends State<EditProfilePage> {
     }
   }
 
+  final ImagePicker _picker = ImagePicker();
+  List<XFile?> _images = []; // 업로드된 이미지 목록
+  Future<void> _pickImage(ImageSource source) async {
+    if (_images.length >= 2) {
+      // 이미 5개의 이미지가 있으면 알림을 표시하고 반환
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text("이미지는 최대 1개까지 업로드할 수 있습니다.")),
+      );
+      return;
+    }
+
+    final XFile? image = await _picker.pickImage(source: source);
+    if (image != null) {
+      setState(() {
+        _images.add(image);
+      });
+    }
+  }
+
+  // 이미지 선택
+  void showImagePickerOptions() {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Wrap(
+          children: [
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Take a photo'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Choose from gallery'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickImage(ImageSource.gallery);
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _nameController.dispose();
@@ -92,44 +141,53 @@ class _EditProfilePageState extends State<EditProfilePage> {
           children: [
             Column(
               children: [
-                Stack(
-                  children: [
-                    const SizedBox(
-                      width: 80,
-                      height: 80,
-                      child: CircleAvatar(
-                        backgroundImage: NetworkImage(
-                            'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'),
+                GestureDetector(
+                  onTap: showImagePickerOptions,
+                  child: Stack(
+                    children: [
+                      const SizedBox(
+                        width: 160,
+                        height: 160,
+                        child: CircleAvatar(
+                          backgroundImage: NetworkImage(
+                              'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'),
+                        ),
                       ),
-                    ),
-                    Container(
-                      width: 80,
-                      height: 80,
-                      alignment: Alignment.bottomRight,
-                      child: const Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          SizedBox(
-                            width: 28,
-                            height: 28,
-                            child: FloatingActionButton(
-                              onPressed: null,
-                              backgroundColor: Colors.white,
-                              child: Icon(Icons.edit),
+                      Container(
+                        width: 160,
+                        height: 160,
+                        alignment: Alignment.bottomRight,
+                        child: Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            GestureDetector(
+                              onTap: showImagePickerOptions,
+                              child: const SizedBox(
+                                width: 28,
+                                height: 28,
+                                child: FloatingActionButton(
+                                  onPressed: null,
+                                  backgroundColor: Colors.white,
+                                  child: Icon(Icons.edit),
+                                ),
+                              ),
                             ),
-                          ),
-                          SizedBox(
-                            width: 25,
-                            height: 25,
-                            child: FloatingActionButton(
-                              onPressed: null,
-                              child: Icon(Icons.edit),
+                            GestureDetector(
+                              onTap: showImagePickerOptions,
+                              child: const SizedBox(
+                                width: 25,
+                                height: 25,
+                                child: FloatingActionButton(
+                                  onPressed: null,
+                                  child: Icon(Icons.edit),
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
