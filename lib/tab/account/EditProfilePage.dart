@@ -33,23 +33,24 @@ class _EditProfilePageState extends State<EditProfilePage> {
   }
 
   // 현재 사용자 데이터 로드
-  void _loadUserData() {
+  void _loadUserData() async {
     final user = _auth.currentUser;
     if (user != null) {
       _nameController.text = user.displayName ?? '';
       _emailController.text = user.email ?? '';
 
       // Firestore에서 사용자 정보 가져오기
-      FirebaseFirestore.instance.collection('users').doc(user.uid).get().then((doc) {
-        if (doc.exists) {
-          final data = doc.data();
-          _nicknameController.text = data?['nickname'] ?? '';
-          _phoneNumController.text = data?['phone'] ?? '';
-          setState(() {
-            _profileImageUrl = data?['profileImageUrl'];
-          });
-        }
-      });
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      if (doc.exists) {
+        final data = doc.data();
+        _nicknameController.text = data?['nickname'] ?? '';
+        _phoneNumController.text = data?['phone'] ?? '';
+
+        // 프로필 이미지 URL 설정
+        setState(() {
+          _profileImageUrl = data?['profile_image'];
+        });
+      }
     }
   }
 
