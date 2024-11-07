@@ -8,11 +8,10 @@ class ChatDetailPage extends StatefulWidget {
   final String chatId; // 채팅방 ID
   final String otherUserId; // 상대방 사용자 ID
 
-  // ChatDetailPage 생성자
   const ChatDetailPage({
     Key? key,
-    required this.chatId, // 채팅방 ID 필수
-    required this.otherUserId, // 상대방 사용자 ID 필수
+    required this.chatId,
+    required this.otherUserId,
   }) : super(key: key);
 
   @override
@@ -24,10 +23,28 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase 인증 객체
   final FirebaseFirestore _firestore = FirebaseFirestore.instance; // Firestore 데이터베이스 객체
 
+  String otherUserName = "Loading..."; // 상대방 사용자 이름을 저장할 변수
+  String otherName = "Loading...";
+  String? otherUserProfileImage; // 상대방 프로필 이미지를 저장할 변수
+
   @override
   void initState() {
     super.initState();
     markMessagesAsRead(); // 페이지 로드시 기존 메시지를 읽음 상태로 변경
+    fetchOtherUserData(); // 페이지 로드시 상대방의 이름과 프로필 이미지를 가져옴
+  }
+
+  // fetchOtherUserData: 상대방 사용자의 이름과 프로필 이미지를 Firestore에서 가져오는 함수
+  Future<void> fetchOtherUserData() async {
+    final userDoc = await _firestore.collection('users').doc(widget.otherUserId).get();
+    print('Fetched user data: ${userDoc.data()}'); // userDoc의 데이터를 출력
+    if (userDoc.exists) {
+      setState(() {
+        otherUserName = userDoc['nickname'] ?? 'Unknown';
+        otherUserProfileImage = userDoc['profile_image'];
+        otherName = userDoc['name'] ?? 'Unknown';
+      });
+    }
   }
 
   // markMessagesAsRead: 상대방이 보낸 읽지 않은 메시지를 읽음 상태로 변경하는 함수
@@ -91,7 +108,7 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         backgroundColor: Colors.white, // AppBar 배경 색상 설정
         iconTheme: const IconThemeData(color: Colors.black), // 아이콘 색상 설정
         title: Text(
-          "${widget.otherUserId}님과의 채팅방", // AppBar 제목에 상대방 ID 표시
+          "$otherName님과의 채팅방", // AppBar 제목에 상대방 이름 표시
           style: const TextStyle(color: Colors.black), // 텍스트 색상 설정
         ),
         elevation: 1, // AppBar 그림자 높이
@@ -140,7 +157,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                     bool showDate = false;
                     if (index == messages.length - 1 ||
                         DateFormat('yyyy년 M월 d일').format(
-                            (messages[index + 1]['timestamp'] as Timestamp).toDate()) !=
+                            (messages[index + 1]['timestamp'] as Timestamp)
+                                .toDate()) !=
                             messageDate) {
                       showDate = true;
                     }
@@ -186,29 +204,54 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                               ? MainAxisAlignment.end // 현재 사용자가 보낸 메시지는 오른쪽 정렬
                               : MainAxisAlignment.start, // 상대방이 보낸 메시지는 왼쪽 정렬
                           children: [
-                            if (isCurrentUser && !isRead) // 읽지 않은 메시지 표시
+                            if (isCurrentUser && !isRead) // 내가 보낸 메시지의 읽음 상태를 메시지 왼쪽에 표시
                               Padding(
-                                padding: const EdgeInsets.only(right: 4.0),
+                                padding: const EdgeInsets.only(right: 0.0),
                                 child: Text(
-                                  '1', // 읽지 않은 메시지 표시
+                                  '1',
                                   style: const TextStyle(
                                     fontSize: 10,
                                     color: Colors.grey,
                                   ),
                                 ),
                               ),
+                            if (!isCurrentUser) // 상대방 메시지에만 프로필 사진과 닉네임 표시
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                    left: 5.0, right: 0.0),
+                                child: Column(
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage: otherUserProfileImage !=
+                                          null &&
+                                          otherUserProfileImage!.isNotEmpty
+                                          ? NetworkImage(otherUserProfileImage!)
+                                          : AssetImage(
+                                          'assets/default_profile.png')
+                                      as ImageProvider,
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      otherUserName,
+                                      style: const TextStyle(
+                                          fontSize: 12, color: Colors.black54),
+                                    ),
+                                  ],
+                                ),
+                              ),
                             Align(
                               alignment: isCurrentUser
-                                  ? Alignment.centerRight // 현재 사용자 메시지는 오른쪽 정렬
-                                  : Alignment.centerLeft, // 상대방 메시지는 왼쪽 정렬
+                                  ? Alignment.centerRight
+                                  : Alignment.centerLeft,
                               child: Container(
-                                padding: const EdgeInsets.all(12), // 메시지 패딩
+                                padding: const EdgeInsets.all(12),
                                 margin: const EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 10), // 메시지 여백
+                                    vertical: 5, horizontal: 5),
                                 decoration: BoxDecoration(
                                   color: isCurrentUser
-                                      ? Colors.blue[100] // 현재 사용자 메시지 배경색
-                                      : Colors.grey[300], // 상대방 메시지 배경색
+                                      ? Colors.blue[100]
+                                      : Colors.grey[300],
                                   borderRadius: BorderRadius.only(
                                     topLeft: const Radius.circular(12),
                                     topRight: const Radius.circular(12),
@@ -221,9 +264,11 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                   ),
                                 ),
                                 child: Text(
-                                  message, // 메시지 텍스트
+                                  message,
                                   style: TextStyle(
-                                    color: isCurrentUser ? Colors.blue[900] : Colors.black,
+                                    color: isCurrentUser
+                                        ? Colors.blue[900]
+                                        : Colors.black,
                                   ),
                                 ),
                               ),
@@ -238,30 +283,29 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(8.0), // 메시지 입력 필드 여백
+            padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
                 Expanded(
-                  // 메시지 입력 필드
                   child: TextField(
-                    controller: _controller, // 메시지 입력 제어용 컨트롤러
+                    controller: _controller,
                     decoration: InputDecoration(
-                      hintText: '메시지를 입력하세요...', // 플레이스홀더 텍스트
+                      hintText: '메시지를 입력하세요...',
                       filled: true,
-                      fillColor: Colors.grey[200], // 입력 필드 배경색
+                      fillColor: Colors.grey[200],
                       contentPadding: const EdgeInsets.symmetric(
-                          vertical: 10.0, horizontal: 16.0), // 내부 여백
+                          vertical: 10.0, horizontal: 16.0),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(24), // 필드 테두리 둥글기
-                        borderSide: BorderSide.none, // 테두리 제거
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
                       ),
                     ),
                   ),
                 ),
-                const SizedBox(width: 8), // 전송 버튼과의 간격
+                const SizedBox(width: 8),
                 IconButton(
-                  icon: const Icon(Icons.send, color: Colors.blue), // 전송 버튼 아이콘과 색상
-                  onPressed: _sendMessage, // 메시지 전송 함수 호출
+                  icon: const Icon(Icons.send, color: Colors.blue),
+                  onPressed: _sendMessage,
                 ),
               ],
             ),
