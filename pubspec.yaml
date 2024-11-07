@@ -46,6 +46,8 @@ dependencies:
   smooth_page_indicator: ^1.2.0+3
   cloud_firestore: ^5.4.4
   firebase_storage: ^12.3.4
+  google_maps_flutter: ^2.9.0
+  kpostal: ^1.1.0
 
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
