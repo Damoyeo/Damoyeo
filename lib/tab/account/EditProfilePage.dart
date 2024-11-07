@@ -4,6 +4,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
+import 'package:firebase_app_check/firebase_app_check.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({Key? key}) : super(key: key);
@@ -21,6 +22,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
   bool _isLoading = false;
   String? _profileImageUrl; // Fire Storage 이미지 url
   XFile? _profileImageFile; // 프로필 이미지 파일
+
+  // 이미지 크기 제한 (5MB)
+  static const int maxFileSize = 5 * 1024 * 1024;
 
   @override
   void initState() {
@@ -58,25 +62,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
 
     try {
+      if (_images.isNotEmpty) {
+        // Firebase Storage 업로드
+        final storageRef = FirebaseStorage.instance
+            .ref()
+            .child('profile_images')
+            .child('${user.uid}.jpg');
 
-      // 선택된 이미지가 있을 경우, Firebase Storage에 업로드 후 URL 가져오기
-      String? imageUrl;
-      if (_profileImageFile != null) {
-        imageUrl = await _uploadImageToStorage(_profileImageFile!);
+        final uploadTask = storageRef.putFile(File(_images.first!.path));
+        final snapshot = await uploadTask;
+        final downloadURL = await snapshot.ref.getDownloadURL();
+        print("Image uploaded. URL: $downloadURL");  // 업로드 확인
+
+        // Firestore에 URL 업데이트
+        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+          'profile_image': downloadURL,
+        }, SetOptions(merge: true));
       }
 
-      // Firestore에 닉네임과 전화번호 저장
-      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-        'nickname': _nicknameController.text,
-        'phone': _phoneNumController.text,
-        'profileImageUrl': imageUrl ?? _profileImageUrl, // 이미지 URL이 있다면 업데이트
-      }, SetOptions(merge: true)); // 새로운 데이터만 업데이트하는 기능
-
-      // 저장 성공 시, 이전 화면으로 이동
-      // 성공 메시지를 포함
       Navigator.pop(context, '프로필이 업데이트되었습니다.');
-
-    } on FirebaseAuthException catch (e) {
+    } on FirebaseException catch (e) {
+      print("Error updating profile: ${e.message}");
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.message}')),
       );
@@ -99,10 +105,20 @@ class _EditProfilePageState extends State<EditProfilePage> {
           .child('${user.uid}_profile.jpg');
 
       // 이미지 파일을 업로드
-      await storageRef.putFile(File(imageFile.path));
+      //final uploagdTask = await storageRef.putFile(File(imageFile.path));
+
+      final uploadTask = await storageRef.putFile(File(imageFile.path));
+      if (uploadTask.state == TaskState.success) {
+        final downloadURL = await uploadTask.ref.getDownloadURL();
+        print("Image uploaded successfully. URL: $downloadURL");
+      } else {
+        print("Image upload failed.");
+        return null;
+      }
 
       // 다운로드 URL을 반환
-      return await storageRef.getDownloadURL();
+      //print("ImageUrl==================================================================" + ImageUrl);
+
     } catch (e) {
       print('Error uploading image: $e');
       return null;
@@ -112,8 +128,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final ImagePicker _picker = ImagePicker();
   List<XFile?> _images = []; // 업로드된 이미지 목록
   Future<void> _pickImage(ImageSource source) async {
-    if (_images.length >= 2) {
-      // 이미 5개의 이미지가 있으면 알림을 표시하고 반환
+    if (_images.length >= 1) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text("이미지는 최대 1개까지 업로드할 수 있습니다.")),
       );
@@ -122,9 +137,21 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     final XFile? image = await _picker.pickImage(source: source);
     if (image != null) {
-      setState(() {
-        _images.add(image);
-      });
+      final file = File(image.path);
+      final fileSize = await file.length();
+
+      if (fileSize > maxFileSize) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("이미지 크기는 5MB 이하로 선택해 주세요.")),
+        );
+      } else {
+        setState(() {
+          _images.add(image);
+          print("Image selected: ${image.path}");  // 이미지 경로 출력
+        });
+      }
+    } else {
+      print("No image selected.");
     }
   }
 
@@ -137,7 +164,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           children: [
             ListTile(
               leading: Icon(Icons.camera_alt),
-              title: Text('Take a photo'),
+              title: Text('카메라'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.camera);
@@ -145,7 +172,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             ListTile(
               leading: Icon(Icons.photo_library),
-              title: Text('Choose from gallery'),
+              title: Text('갤러리'),
               onTap: () {
                 Navigator.pop(context);
                 _pickImage(ImageSource.gallery);
@@ -208,6 +235,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 child: FloatingActionButton(
                                   onPressed: null,
                                   backgroundColor: Colors.white,
+                                  heroTag: 'floatingButton1',
                                   child: Icon(Icons.edit),
                                 ),
                               ),
@@ -219,6 +247,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                 height: 25,
                                 child: FloatingActionButton(
                                   onPressed: null,
+                                  heroTag: 'floatingButton2',
                                   child: Icon(Icons.edit),
                                 ),
                               ),

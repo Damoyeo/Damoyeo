@@ -75,33 +75,6 @@ class AccountPage extends StatelessWidget {
                             );
                           },
                         ),
-                        Container(
-                          width: 80,
-                          height: 80,
-                          alignment: Alignment.bottomRight,
-                          child: const Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              SizedBox(
-                                width: 28,
-                                height: 28,
-                                child: FloatingActionButton(
-                                  onPressed: null,
-                                  backgroundColor: Colors.white,
-                                  child: Icon(Icons.add),
-                                ),
-                              ),
-                              SizedBox(
-                                width: 25,
-                                height: 25,
-                                child: FloatingActionButton(
-                                  onPressed: null,
-                                  child: Icon(Icons.add),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 8),

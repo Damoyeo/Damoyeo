@@ -39,6 +39,7 @@ dependencies:
   image_picker: ^1.1.2
   firebase_core: ^3.6.0
   firebase_auth: ^5.3.1
+  firebase_app_check: ^0.3.1+4
   firebase_ui_auth: ^1.4.0
   firebase_ui_oauth: ^1.4.0
   firebase_ui_oauth_google: ^1.0.21
@@ -73,7 +74,8 @@ flutter:
     # included with your application, so that you can use the icons in
     # the material Icons class.
     uses-material-design: true
-
+    assets:
+      - assets/default_profile.jpg
     # To add assets to your application, add an assets section, like this:
     # assets:
     #   - images/a_dot_burr.jpeg
