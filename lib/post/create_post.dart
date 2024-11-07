@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:gomoph/models//create_model.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:kpostal/kpostal.dart';
 
 class CreatePost extends StatefulWidget {
   const CreatePost({super.key});
@@ -232,7 +233,24 @@ class _CreatePostState extends State<CreatePost> {
                 ),
                 SizedBox(width: 8),
                 ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () async {
+                    await Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => KpostalView(
+                          // useLocalServer: true,
+                          // localPort: 1024,
+                          // kakaoKey: '{Add your KAKAO DEVELOPERS JS KEY}',
+                          callback: (Kpostal result) {
+                            setState(() {
+                              // 우편번호 코드 postCode = result.postCode;
+                              _addressTextController.text = result.address;
+
+                            });
+                          },
+                        ),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     shape: RoundedRectangleBorder(
