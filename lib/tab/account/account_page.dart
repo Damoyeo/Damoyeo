@@ -46,7 +46,7 @@ class AccountPage extends StatelessWidget {
                           width: 80,
                           height: 80,
                           alignment: Alignment.bottomRight,
-                          child: Stack(
+                          child: const Stack(
                             alignment: Alignment.center,
                             children: [
                               SizedBox(
@@ -71,7 +71,7 @@ class AccountPage extends StatelessWidget {
                         ),
                       ],
                     ),
-                    SizedBox(height: 8),
+                    const SizedBox(height: 8),
                     const Text(
                       '이소룡',
                       style: TextStyle(
@@ -81,7 +81,7 @@ class AccountPage extends StatelessWidget {
                     ),
                   ],
                 ),
-                Column(
+                const Column(
                   children: [
                     Text(
                       '3',
@@ -126,11 +126,19 @@ class AccountPage extends StatelessWidget {
                   ListTile(
                     title: Text('내 정보 수정'),
                     trailing: Icon(Icons.chevron_right),
-                    onTap: () {
-                      // 내 정보 수정 페이지로 이동하는 로직
-                      Navigator.of(context).push(
+                    onTap: () async {
+                      // 내 정보 수정 페이지로 이동
+                      // EditProfilePage에서 알림 정보가 올 때 까지 대기
+                      final result = await Navigator.of(context).push(
                           MaterialPageRoute(builder: (context) => EditProfilePage()),
                       );
+
+                      // result가 null이 아니고 메시지가 있다면 성공 스낵바 표시
+                      if (result != null) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text(result.toString())),
+                        );
+                      }
                     },
                   ),
                   ListTile(

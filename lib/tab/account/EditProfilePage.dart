@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -11,6 +12,8 @@ class EditProfilePage extends StatefulWidget {
 class _EditProfilePageState extends State<EditProfilePage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _nicknameController = TextEditingController();
+  final _phoneNumController = TextEditingController();
   final _auth = FirebaseAuth.instance;
   bool _isLoading = false;
 
@@ -26,6 +29,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
     if (user != null) {
       _nameController.text = user.displayName ?? '';
       _emailController.text = user.email ?? '';
+
+      // Firestore에서 닉네임과 전화번호 가져오기
+      FirebaseFirestore.instance.collection('users').doc(user.uid).get().then((doc) {
+        if (doc.exists) {
+          final data = doc.data();
+          _nicknameController.text = data?['nickname'] ?? '';
+          _phoneNumController.text = data?['phone'] ?? '';
+        }
+      });
     }
   }
 
@@ -38,13 +50,16 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
 
     try {
-      // 프로필 업데이트
-      await user.updateDisplayName(_nameController.text);
-      await user.updateEmail(_emailController.text);
-      await user.reload();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Profile updated successfully')),
-      );
+
+      // Firestore에 닉네임과 전화번호 저장
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
+        'nickname': _nicknameController.text,
+        'phone': _phoneNumController.text,
+      }, SetOptions(merge: true)); // 새로운 데이터만 업데이트하는 기능
+      // 저장 성공 시, 이전 화면으로 이동
+      // 성공 메시지를 포함
+      Navigator.pop(context, 'Profile updated successfully');
+
     } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Error: ${e.message}')),
@@ -60,6 +75,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
+    _nicknameController.dispose();
+    _phoneNumController.dispose();
     super.dispose();
   }
 
@@ -76,15 +93,26 @@ class _EditProfilePageState extends State<EditProfilePage> {
             TextField(
               controller: _nameController,
               decoration: InputDecoration(labelText: '이름'),
+              enabled: false, // 수정 불가
             ),
             TextField(
               controller: _emailController,
               decoration: InputDecoration(labelText: '이메일'),
+              enabled: false, // 수정 불가
               keyboardType: TextInputType.emailAddress,
+            ),
+            TextField(
+              controller: _nicknameController,
+              decoration: InputDecoration(labelText: '닉네임'),
+            ),
+            TextField(
+              controller: _phoneNumController,
+              decoration: InputDecoration(labelText: '전화번호'),
+              keyboardType: TextInputType.phone,
             ),
             SizedBox(height: 20),
             _isLoading
-                ? CircularProgressIndicator()
+                ? CircularProgressIndicator() // 로딩 이미지
                 : ElevatedButton(
               onPressed: _updateProfile,
               child: Text('프로필 수정 저장'),
