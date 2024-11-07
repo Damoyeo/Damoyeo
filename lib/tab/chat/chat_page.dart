@@ -157,6 +157,12 @@ class ChatPage extends StatelessWidget {
     }
   }
 
+  // getUserName: Firestore에서 특정 사용자 ID를 사용하여 해당 사용자의 이름을 가져오는 함수
+  Future<String> getUserName(String userId) async {
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    return userDoc.exists ? userDoc['name'] ?? 'Unknown' : 'Unknown';
+  }
+
   @override
   Widget build(BuildContext context) {
     final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -193,51 +199,64 @@ class ChatPage extends StatelessWidget {
                 return const SizedBox.shrink(); // 다른 사용자가 없으면 빈 위젯 반환
               }
 
-              return ListTile(
-                title: Text("Chat with $otherUserId"), // 상대방 사용자와의 채팅방 이름
-                subtitle: Text(lastMessage), // 마지막 메시지
-                trailing: isPinned ? const Icon(Icons.push_pin) : null, // 고정 아이콘 표시
-                onTap: () {
-                  // 채팅방으로 이동
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ChatDetailPage(
-                        chatId: chatId,
-                        otherUserId: otherUserId,
-                      ),
-                    ),
-                  );
-                },
-                onLongPress: () {
-                  // 하단 메뉴를 통해 채팅방 고정 및 나가기 기능 제공
-                  showModalBottomSheet(
-                    context: context,
-                    builder: (BuildContext context) {
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          ListTile(
-                            leading: const Icon(Icons.push_pin),
-                            title: Text(isPinned ? '채팅방 상단 고정 해제' : '채팅방 상단 고정'),
-                            onTap: () {
-                              Navigator.pop(context);
-                              if (isPinned) {
-                                unpinChatRoom(chatId); // 고정 해제
-                              } else {
-                                pinChatRoom(chatId); // 고정
-                              }
-                            },
+              return FutureBuilder<String>(
+                future: getUserName(otherUserId),
+                builder: (context, nameSnapshot) {
+                  if (!nameSnapshot.hasData) {
+                    return const ListTile(
+                      title: Text('Loading...'),
+                    );
+                  }
+
+                  final otherUserName = nameSnapshot.data!;
+
+                  return ListTile(
+                    title: Text(otherUserName), // 가져온 사용자 이름 표시
+                    subtitle: Text(lastMessage), // 마지막 메시지 표시
+                    trailing: isPinned ? const Icon(Icons.push_pin) : null, // 고정 아이콘 표시
+                    onTap: () {
+                      // 채팅방으로 이동
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ChatDetailPage(
+                            chatId: chatId,
+                            otherUserId: otherUserId,
                           ),
-                          ListTile(
-                            leading: const Icon(Icons.exit_to_app),
-                            title: const Text('채팅방 나가기'),
-                            onTap: () async {
-                              Navigator.pop(context);
-                              await exitChatRoom(chatId); // 채팅방 나가기
-                            },
-                          ),
-                        ],
+                        ),
+                      );
+                    },
+                    onLongPress: () {
+                      // 하단 메뉴를 통해 채팅방 고정 및 나가기 기능 제공
+                      showModalBottomSheet(
+                        context: context,
+                        builder: (BuildContext context) {
+                          return Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              ListTile(
+                                leading: const Icon(Icons.push_pin),
+                                title: Text(isPinned ? '채팅방 상단 고정 해제' : '채팅방 상단 고정'),
+                                onTap: () {
+                                  Navigator.pop(context);
+                                  if (isPinned) {
+                                    unpinChatRoom(chatId); // 고정 해제
+                                  } else {
+                                    pinChatRoom(chatId); // 고정
+                                  }
+                                },
+                              ),
+                              ListTile(
+                                leading: const Icon(Icons.exit_to_app),
+                                title: const Text('채팅방 나가기'),
+                                onTap: () async {
+                                  Navigator.pop(context);
+                                  await exitChatRoom(chatId); // 채팅방 나가기
+                                },
+                              ),
+                            ],
+                          );
+                        },
                       );
                     },
                   );
