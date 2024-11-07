@@ -1,4 +1,5 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'EditProfilePage.dart';
@@ -9,6 +10,15 @@ class AccountPage extends StatelessWidget {
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut(); // 로그아웃 수행
     Navigator.of(context).pushReplacementNamed('/login'); // 로그인 페이지로 이동
+  }
+
+  Future<String?> _getUserProfileImageUrl() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
+      return doc.data()?['profile_image']; // profile_image 필드 반환
+    }
+    return null;
   }
 
   @override
@@ -34,13 +44,36 @@ class AccountPage extends StatelessWidget {
                   children: [
                     Stack(
                       children: [
-                        const SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: CircleAvatar(
-                            backgroundImage: NetworkImage(
-                                'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'),
-                          ),
+                        FutureBuilder<String?>(
+                          future: _getUserProfileImageUrl(),
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState == ConnectionState.waiting) {
+                              return const SizedBox(
+                                width: 80,
+                                height: 80,
+                                child: CircleAvatar(
+                                  backgroundColor: Colors.grey,
+                                ),
+                              );
+                            }
+                            if (snapshot.hasData && snapshot.data != null) {
+                              return SizedBox(
+                                width: 80,
+                                height: 80,
+                                child: CircleAvatar(
+                                  backgroundImage: NetworkImage(snapshot.data!),
+                                ),
+                              );
+                            }
+                            return const SizedBox(
+                              width: 80,
+                              height: 80,
+                              child: CircleAvatar(
+                                backgroundImage: NetworkImage(
+                                    'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'), // 기본 이미지
+                              ),
+                            );
+                          },
                         ),
                         Container(
                           width: 80,
@@ -128,12 +161,10 @@ class AccountPage extends StatelessWidget {
                     trailing: Icon(Icons.chevron_right),
                     onTap: () async {
                       // 내 정보 수정 페이지로 이동
-                      // EditProfilePage에서 알림 정보가 올 때 까지 대기
                       final result = await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (context) => EditProfilePage()),
+                        MaterialPageRoute(builder: (context) => EditProfilePage()),
                       );
 
-                      // result가 null이 아니고 메시지가 있다면 성공 스낵바 표시
                       if (result != null) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(content: Text(result.toString())),
