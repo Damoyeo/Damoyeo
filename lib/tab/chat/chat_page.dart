@@ -7,6 +7,18 @@ import 'chat_detail_page.dart';
 class ChatPage extends StatelessWidget {
   const ChatPage({super.key});
 
+  // Firestore에서 사용자 정보(닉네임과 프로필 사진)를 가져오는 함수
+  Future<Map<String, dynamic>> getUserInfo(String userId) async {
+    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
+    if (userDoc.exists) {
+      return {
+        'name': userDoc['name'] ?? 'Unknown',
+        'profile_image': userDoc['profile_image'] ?? '',
+      };
+    }
+    return {'name': 'Unknown', 'profile_image': ''};
+  }
+
   // createOrGetChatRoom: 지정한 사용자 ID와 채팅방을 생성하거나 기존 채팅방을 가져오는 함수
   Future<String?> createOrGetChatRoom(String otherUserId) async {
     final FirebaseAuth _auth = FirebaseAuth.instance; // Firebase 인증 객체
@@ -157,12 +169,6 @@ class ChatPage extends StatelessWidget {
     }
   }
 
-  // getUserName: Firestore에서 특정 사용자 ID를 사용하여 해당 사용자의 이름을 가져오는 함수
-  Future<String> getUserName(String userId) async {
-    final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-    return userDoc.exists ? userDoc['name'] ?? 'Unknown' : 'Unknown';
-  }
-
   @override
   Widget build(BuildContext context) {
     final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -199,18 +205,25 @@ class ChatPage extends StatelessWidget {
                 return const SizedBox.shrink(); // 다른 사용자가 없으면 빈 위젯 반환
               }
 
-              return FutureBuilder<String>(
-                future: getUserName(otherUserId),
-                builder: (context, nameSnapshot) {
-                  if (!nameSnapshot.hasData) {
+              return FutureBuilder<Map<String, dynamic>>(
+                future: getUserInfo(otherUserId),
+                builder: (context, userSnapshot) {
+                  if (!userSnapshot.hasData) {
                     return const ListTile(
                       title: Text('Loading...'),
                     );
                   }
 
-                  final otherUserName = nameSnapshot.data!;
+                  final otherUserName = userSnapshot.data!['name'];
+                  final profileImageUrl = userSnapshot.data!['profile_image'];
 
                   return ListTile(
+                    leading: CircleAvatar(
+                      radius: 24,
+                      backgroundImage: profileImageUrl.isNotEmpty
+                          ? NetworkImage(profileImageUrl)
+                          : AssetImage('assets/default_profile.png') as ImageProvider,
+                    ),
                     title: Text(otherUserName), // 가져온 사용자 이름 표시
                     subtitle: Text(lastMessage), // 마지막 메시지 표시
                     trailing: isPinned ? const Icon(Icons.push_pin) : null, // 고정 아이콘 표시
