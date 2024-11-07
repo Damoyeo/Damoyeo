@@ -50,6 +50,8 @@ dependencies:
   firebase_storage: ^12.3.4
   google_maps_flutter: ^2.9.0
   kpostal: ^1.1.0
+  currency_text_input_formatter: ^2.2.6
+  cached_network_image: ^3.4.1
 
 dev_dependencies:
   flutter_test:
