@@ -69,6 +69,14 @@ class _LoginScreenState extends State<LoginScreen> {
           key: _formKey,
           child: Column(
             children: [
+              const SizedBox(
+                width: 80,
+                height: 80,
+                child: CircleAvatar(
+                  backgroundImage: NetworkImage(
+                      'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'),
+                ),
+              ),
               // 이메일 입력 필드
               TextFormField(
                 controller: emailController,
