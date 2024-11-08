@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
@@ -13,17 +14,24 @@ class PostDetail extends StatefulWidget {
 }
 
 class _PostDetailState extends State<PostDetail> {
-  final List<String> _urls = const [
-    'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
-    'https://www.news1.kr/_next/image?url=https%3A%2F%2Fi3n.news1.kr%2Fsystem%2Fphotos%2F2024%2F8%2F20%2F6833973%2Fhigh.jpg&w=1920&q=75',
-    'https://images.khan.co.kr/article/2023/07/26/news-p.v1.20230726.d22b5014f9664967853345853e5056fa_P1.jpg',
-    'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
-  ];
+  // final List<String> _urls = const [
+  //   'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
+  //   'https://www.news1.kr/_next/image?url=https%3A%2F%2Fi3n.news1.kr%2Fsystem%2Fphotos%2F2024%2F8%2F20%2F6833973%2Fhigh.jpg&w=1920&q=75',
+  //   'https://images.khan.co.kr/article/2023/07/26/news-p.v1.20230726.d22b5014f9664967853345853e5056fa_P1.jpg',
+  //   'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
+  // ];
   PageController _pageController = PageController();
   bool isFavorite = false;
 
   @override
+  void dispose() {
+    _pageController.dispose(); // 컨트롤러 해제
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final List<String> _urls = widget.post.imageUrls;
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         Size _size = MediaQuery.of(context).size;
@@ -91,20 +99,30 @@ class _PostDetailState extends State<PostDetail> {
                     controller: _pageController,
                     count: _urls.length,
                     effect: WormEffect(
-                      activeDotColor: Theme.of(context).primaryColor,
-                      dotColor: Theme.of(context).colorScheme.background,
+                      dotColor: Color(0xffC5C6CC),
+                      activeDotColor: Color(0xff006FFD),
                       radius: 2,
                       dotHeight: 4,
                       dotWidth: 4,
                     ),
-                    onDotClicked: (index) {},
+                    onDotClicked: (index) {
+                      _pageController.animateToPage(
+                        index,
+                        duration: Duration(milliseconds: 300),
+                        curve: Curves.easeInOut,
+                      );
+                    },
                   ),
                   centerTitle: true,
                   background: PageView.builder(
+                    controller: _pageController,
                     allowImplicitScrolling: true,
                     itemBuilder: (context, item) {
-                      return Image.network(
-                        _urls[item],
+                      return CachedNetworkImage(
+                        imageUrl: _urls[item],
+                        placeholder: (context, url) =>
+                            CircularProgressIndicator(),
+                        errorWidget: (context, url, error) => Icon(Icons.error),
                         fit: BoxFit.cover,
                         scale: 0.1,
                       );
@@ -150,7 +168,7 @@ class _PostDetailState extends State<PostDetail> {
                       Row(
                         children: [
                           Text(
-                            '스터디원 모집',
+                            widget.post.title,
                             style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
@@ -160,7 +178,7 @@ class _PostDetailState extends State<PostDetail> {
                       ),
                       SizedBox(height: 8),
                       Text(
-                        '10월 15일 17:00~19:00\n서울특별시 성북구 삼성교로16길 116',
+                        '10월 15일 17:00~19:00\n${widget.post.address} ${widget.post.detailAddress}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
@@ -168,28 +186,7 @@ class _PostDetailState extends State<PostDetail> {
                       ),
                       SizedBox(height: 16),
                       Text(
-                        '공부 열심히 하실분 구해요\n'
-                        '저희는 고급 모바일 프로그래밍에 대해 공부하려고 합니다.\n'
-                        '참여할 마음만 있으시면 됩니다.\n'
-                        '공부 열심히 하실분 구해요\n'
-                        '저희는 고급 모바일 프로그래밍에 대해 공부하려고 합니다.\n'
-                        '참여할 마음만 있으시면 됩니다.\n'
-                        '공부 열심히 하실분 구해요\n'
-                        '저희는 고급 모바일 프로그래밍에 대해 공부하려고 합니다.\n'
-                        '참여할 마음만 있으시면 됩니다.\n'
-                        '공부 열심히 하실분 구해요\n'
-                        '저희는 고급 모바일 프로그래밍에 대해 공부하려고 합니다.\n'
-                        '참여할 마음만 있으시면 됩니다.\n'
-                        '공부 열심히 하실분 구해요\n'
-                        '저희는 고급 모바일 프로그래밍에 대해 공부하려고 합니다.\n'
-                        '참여할 마음만 있으시면 됩니다.\n'
-                        '공부 열심히 하실분 구해요\n'
-                        '저희는 고급 모바일 프로그래밍에 대해 공부하려고 합니다.\n'
-                        '참여할 마음만 있으시면 됩니다.\n'
-                        '공부 열심히 하실분 구해요\n'
-                        '저희는 고급 모바일 프로그래밍에 대해 공부하려고 합니다.\n'
-                        '참여할 마음만 있으시면 됩니다.\n'
-                        '공부 열심히 하실분 구해요\n',
+                        widget.post.content,
                         style: TextStyle(
                           fontSize: 14,
                           height: 1.5,
@@ -217,7 +214,7 @@ class _PostDetailState extends State<PostDetail> {
                       ),
                     ),
                     child: Text(
-                      '참여하기 1/6',
+                      '참여하기 1/${widget.post.recruit}',
                       style: TextStyle(fontSize: 16, color: Colors.white),
                     ),
                   ),
