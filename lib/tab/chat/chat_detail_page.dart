@@ -159,7 +159,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                         DateFormat('yyyy년 M월 d일').format(
                             (messages[index + 1]['timestamp'] as Timestamp)
                                 .toDate()) !=
-                            messageDate) {
+                            messageDate &&
+                        messageDate != '') {
                       showDate = true;
                     }
 
