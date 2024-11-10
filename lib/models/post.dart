@@ -8,7 +8,7 @@ class Post {
   String tag;
   int recruit;
   DateTime createdAt;
-  String imageUrl;// 이미지 URL 필드 추가 (nullable)
+  String imageUrl;
   List<String> imageUrls;
 
   Post({
@@ -19,7 +19,7 @@ class Post {
     required this.createdAt,
     required this.recruit,
     required this.imageUrl,
-    required this.imageUrls, // 생성자에 imageUrl 추가
+    required this.imageUrls,
   });
 
   // Firestore 데이터를 Post 객체로 변환
@@ -32,7 +32,7 @@ class Post {
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       recruit: json['recruit'] as int,
       imageUrl: json['imageUrl'] as String,
-      imageUrls: List<String>.from(json['imageUrls'] ?? []), // 안전하게 리스트 변환
+      imageUrls: List<String>.from(json['imageUrls'] ?? []),
     );
   }
 
@@ -46,7 +46,53 @@ class Post {
       'createdAt': Timestamp.fromDate(createdAt),
       'recruit': recruit,
       'imageUrl': imageUrl,
-      'imageUrls': imageUrls// imageUrl 필드 추가
+      'imageUrls': imageUrls,
     };
+  }
+
+  // 찜 추가 메서드
+  Future<void> addFavorite() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      final favoriteRef = FirebaseFirestore.instance
+          .collection('posts')
+          .doc(id)
+          .collection('favorites')
+          .doc(userId);
+
+      await favoriteRef.set({
+        'user_id': userId,
+        'favoritedAt': FieldValue.serverTimestamp(), // 찜한 시간
+      });
+    }
+  }
+
+  // 찜 제거 메서드
+  Future<void> removeFavorite() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId != null) {
+      final favoriteRef = FirebaseFirestore.instance
+          .collection('posts')
+          .doc(id)
+          .collection('favorites')
+          .doc(userId);
+
+      await favoriteRef.delete();
+    }
+  }
+
+  // 찜 여부 확인 메서드
+  Future<bool> isFavorite() async {
+    final userId = FirebaseAuth.instance.currentUser?.uid;
+    if (userId == null) return false;
+
+    final favoriteDoc = await FirebaseFirestore.instance
+        .collection('posts')
+        .doc(id)
+        .collection('favorites')
+        .doc(userId)
+        .get();
+
+    return favoriteDoc.exists;
   }
 }

@@ -1,41 +1,178 @@
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:gomoph/post/post_detail.dart';
 import '../../models/post.dart';
-import '../../post/post_detail.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 
-class FavoritePage extends StatelessWidget {
+class FavoritePage extends StatefulWidget {
   const FavoritePage({super.key});
 
-  // 현재 사용자의 찜한 게시물만 가져오는 스트림
-  Stream<List<Post>> getFavoritePostsStream() {
+  @override
+  _FavoritePageState createState() => _FavoritePageState();
+}
+
+class _FavoritePageState extends State<FavoritePage> {
+  String _sortOption = '최신순'; // 기본 정렬 기준
+
+  // Firestore에서 현재 사용자가 찜한 게시물만 가져오는 스트림
+  Stream<List<Post>> getFavoritePostsStream() async* {
     final userId = FirebaseAuth.instance.currentUser?.uid;
-
     if (userId == null) {
-      // 로그인된 사용자가 없을 경우 빈 스트림 반환
-      return Stream.value([]);
-    }
+      yield []; // 로그인된 사용자가 없을 경우 빈 리스트 반환
+    } else {
+      // 모든 posts 컬렉션 문서를 가져옴
+      final postsSnapshot = await FirebaseFirestore.instance.collection('posts').get();
 
-    return FirebaseFirestore.instance
-        .collection('posts')
-        .where('favorite.$userId', isEqualTo: true) // 현재 사용자가 좋아요한 게시물 필터링
-        .withConverter<Post>(
-      fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),
-      toFirestore: (post, _) => post.toJson(),
-    )
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+      final favoritePosts = <Post>[];
+      for (final postDoc in postsSnapshot.docs) {
+        // 각 게시물의 favorite 하위 컬렉션에 userId 문서가 있는지 확인
+        final favoriteDoc = await postDoc.reference.collection('favorite').doc(userId).get();
+        if (favoriteDoc.exists) {
+          favoritePosts.add(Post.fromJson(postDoc.data()));
+        }
+      }
+
+      // 선택한 정렬 옵션에 따라 리스트 정렬
+      if (_sortOption == '최신순') {
+        favoritePosts.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      } else if (_sortOption == '오래된순') {
+        favoritePosts.sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      } else if (_sortOption == '가나다순') {
+        favoritePosts.sort((a, b) => a.title.compareTo(b.title));
+      } else if (_sortOption == '가나다 역순') {
+        favoritePosts.sort((a, b) => b.title.compareTo(a.title));
+      }
+
+      yield favoritePosts;
+    }
+  }
+
+  // 정렬 모달 시트를 표시하는 함수
+  void _showSortOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _sortOption = _sortOption == '최신순' ? '오래된순' : '최신순';
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      _sortOption == '최신순' ? '오래된순' : '최신순',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _sortOption = _sortOption == '가나다순' ? '가나다 역순' : '가나다순';
+                      });
+                      Navigator.pop(context);
+                    },
+                    child: Text(
+                      _sortOption == '가나다순' ? '가나다 역순' : '가나다순',
+                      style: TextStyle(
+                        color: Colors.blue,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // 필터 모달 시트를 표시하는 함수
+  void _showFilterOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                title: Text('Option 1'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                title: Text('Option 2'),
+                onTap: () {
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("찜 목록"),
-        centerTitle: true,
         backgroundColor: Colors.white,
-        elevation: 1,
-        titleTextStyle: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        centerTitle: true,
+        title: Row(
+          children: [
+            SizedBox(width: 8.0),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.blue),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextButton.icon(
+                onPressed: () => _showSortOptions(context),
+                icon: Icon(Icons.unfold_more, color: Colors.blue),
+                label: Text('Sort', style: TextStyle(color: Colors.blue)),
+              ),
+            ),
+            Spacer(),
+            Text(
+              "찜한 게시물",
+              style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+            ),
+            Spacer(),
+            Container(
+              decoration: BoxDecoration(
+                border: Border.all(color: Colors.blue),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: TextButton.icon(
+                onPressed: () => _showFilterOptions(context),
+                icon: Icon(Icons.filter_list, color: Colors.blue),
+                label: Text('Filter', style: TextStyle(color: Colors.blue)),
+              ),
+            ),
+            SizedBox(width: 8.0),
+          ],
+        ),
         iconTheme: IconThemeData(color: Colors.black),
       ),
       body: StreamBuilder<List<Post>>(
@@ -57,6 +194,7 @@ class FavoritePage extends StatelessWidget {
             itemCount: posts.length,
             itemBuilder: (context, index) {
               final post = posts[index];
+              final userId = getCurrentUserId();
 
               return Card(
                 margin: EdgeInsets.only(bottom: 8),
@@ -65,8 +203,8 @@ class FavoritePage extends StatelessWidget {
                     width: 50.0,
                     height: 50.0,
                     color: Colors.grey[300],
-                    child: post.imageUrl != null
-                        ? Image.network(post.imageUrl!, fit: BoxFit.cover)
+                    child: post.imageUrl.isNotEmpty
+                        ? Image.network(post.imageUrl, fit: BoxFit.cover)
                         : Icon(Icons.image, color: Colors.white),
                   ),
                   title: Text(post.title),
@@ -82,7 +220,27 @@ class FavoritePage extends StatelessWidget {
                       Text('모집인원 ${post.recruit}'),
                     ],
                   ),
-                  trailing: Icon(Icons.favorite, color: Colors.blue),
+                    trailing: FutureBuilder<bool>(
+                      future: userId != null
+                          ? _isLiked(post.id, userId!)
+                          : Future.value(false),
+                      builder: (context, snapshot) {
+                        bool isLiked = snapshot.data ?? false;
+                        return IconButton(
+                          icon: Icon(
+                            isLiked ? Icons.favorite : Icons.favorite_border,
+                            color: isLiked ? Colors.red : null,
+                          ),
+                          onPressed: () {
+                            if (userId != null) {
+                              _toggleFavorite(post.id, userId!);
+                            } else {
+                              print("User not logged in");
+                            }
+                          },
+                        );
+                      },
+                    ),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -98,5 +256,40 @@ class FavoritePage extends StatelessWidget {
         },
       ),
     );
+  }
+
+  // 사용자 ID 가져오기
+  String? getCurrentUserId() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.uid;
+  }
+
+  Future<bool> _isLiked(String postId, String userId) async {
+    final favoriteRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('favorite')
+        .doc(userId);
+    final docSnapshot = await favoriteRef.get();
+    return docSnapshot.exists;
+  }
+
+  Future<void> _toggleFavorite(String postId, String userId) async {
+    final favoriteRef = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('favorite')
+        .doc(userId);
+    final isLiked = await _isLiked(postId, userId);
+
+    if (isLiked) {
+      await favoriteRef.delete();
+    } else {
+      await favoriteRef.set({
+        'user_id': userId,
+        'createdAt': Timestamp.now(),
+      });
+    }
+    setState(() {});
   }
 }
