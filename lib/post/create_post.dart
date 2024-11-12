@@ -53,6 +53,49 @@ class _CreatePostState extends State<CreatePost> {
 
   //////////////////////////////////////////////////////////
 
+  //유효성 검사
+  bool _isTitleValid = true;
+  bool _isLocalSelectedValid = true;
+  bool _isAddressValid = true;
+  bool _isDetailAddressValid = true;
+  bool _isCostValid = true;
+  bool _isContentValid = true;
+  bool _isSelectedValid = true;
+
+  void _validateFields() {
+    setState(() {
+      _isTitleValid = _titleTextController.text.isNotEmpty;
+      _isLocalSelectedValid = _localSelectedValue != null;
+      _isAddressValid = _addressTextController.text.isNotEmpty;
+      _isDetailAddressValid = _detailAddressTextController.text.isNotEmpty;
+      _isCostValid = _costTextController.text.isNotEmpty;
+      _isContentValid = _contentTextController.text.isNotEmpty;
+      _isSelectedValid = _selectedCategoryIndex != null;
+    });
+  }
+ //에러 메시지
+  Widget buildErrorIndicator(bool isValid, String message) {
+    if (isValid) return SizedBox.shrink(); // 유효할 경우 아무것도 표시하지 않음
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 4.0),
+      child: Row(
+        children: [
+          Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.red,
+            size: 20,
+          ),
+          SizedBox(width: 4),
+          Text(
+            message,
+            style: TextStyle(color: Colors.red, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
   final ImagePicker _picker = ImagePicker();
   List<XFile?> _images = []; // 업로드된 이미지 목록
 
@@ -233,9 +276,17 @@ class _CreatePostState extends State<CreatePost> {
               controller: _titleTextController,
               decoration: InputDecoration(
                 hintText: '제목',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: _isTitleValid ? Colors.grey : Colors.red,
+                  ),
+                ),
               ),
+              onChanged: (_) {
+                if (!_isTitleValid) setState(() => _isTitleValid = true);
+              },
             ),
+            buildErrorIndicator(_isTitleValid,"입력해주세요"),
             SizedBox(height: 16),
             Text('모집 분야',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -261,7 +312,11 @@ class _CreatePostState extends State<CreatePost> {
             DropdownButtonFormField<String>(
               value: _localSelectedValue,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: _isLocalSelectedValid ? Colors.grey : Colors.red,
+                  ),
+                ),
               ),
               hint: Text('지역을 선택해주세요.'),
               items: ['서울특별시', '부산광역시', '대구광역시']
@@ -272,10 +327,12 @@ class _CreatePostState extends State<CreatePost> {
                   .toList(),
               onChanged: (String? newValue) {
                 setState(() {
-                  _localSelectedValue = newValue; // 선택된 값 업데이트
+                  _localSelectedValue = newValue;
+                  _isLocalSelectedValid = true; // 선택된 값 업데이트
                 });
               },
             ),
+            buildErrorIndicator(_isLocalSelectedValid,"입력해주세요"),
             SizedBox(height: 16),
             Text(
               '활동 장소',
@@ -290,10 +347,20 @@ class _CreatePostState extends State<CreatePost> {
                     readOnly: true,
                     decoration: InputDecoration(
                       hintText: '기본주소',
-                      border: OutlineInputBorder(),
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: _isAddressValid ? Colors.grey : Colors.red,
+                        ),
+                      ),
                     ),
+                    onChanged: (_) {
+                      if (!_isAddressValid)
+                        setState(() => _isAddressValid = true);
+                    },
                   ),
                 ),
+                buildErrorIndicator(_isAddressValid,"입력해주세요"),
+
                 SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () async {
@@ -332,9 +399,18 @@ class _CreatePostState extends State<CreatePost> {
               controller: _detailAddressTextController,
               decoration: InputDecoration(
                 hintText: '상세주소',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: _isDetailAddressValid ? Colors.grey : Colors.red,
+                  ),
+                ),
               ),
+              onChanged: (_) {
+                if (!_isDetailAddressValid)
+                  setState(() => _isDetailAddressValid = true);
+              },
             ),
+            buildErrorIndicator(_isDetailAddressValid,"입력해주세요"),
             SizedBox(height: 16),
             Text('모집 인원',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -361,10 +437,18 @@ class _CreatePostState extends State<CreatePost> {
               controller: _costTextController,
               decoration: InputDecoration(
                 hintText: '₩ 활동금액을 입력해주세요.',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: _isCostValid ? Colors.grey : Colors.red,
+                  ),
+                ),
               ),
               keyboardType: TextInputType.number,
+              onChanged: (_) {
+                if (!_isCostValid) setState(() => _isCostValid = true);
+              },
             ),
+            buildErrorIndicator(_isCostValid,"입력해주세요"),
             SizedBox(height: 16),
             Text('불참 횟수 제한',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -395,39 +479,83 @@ class _CreatePostState extends State<CreatePost> {
               controller: _contentTextController,
               decoration: InputDecoration(
                 hintText: '모집글 내용을 작성해주세요.',
-                border: OutlineInputBorder(),
+                border: OutlineInputBorder(
+                  borderSide: BorderSide(
+                    color: _isContentValid ? Colors.grey : Colors.red,
+                  ),
+                ),
               ),
               maxLines: 3,
+              onChanged: (_) {
+                if (!_isContentValid) setState(() => _isContentValid = true);
+              },
             ),
+            buildErrorIndicator(_isContentValid,"입력해주세요"),
             SizedBox(height: 24),
             Center(
               child: SizedBox(
                 width: double.infinity, // 화면 너비에 맞춰서 버튼을 꽉 차게 설정
                 child: ElevatedButton(
                   onPressed: () async {
+                    _validateFields();
                     // 작성 완료 기능 추가
-                    if (_localSelectedValue != null &&
-                        _titleTextController.text.isNotEmpty &&
-                        _contentTextController.text.isNotEmpty &&
-                        _addressTextController.text.isNotEmpty &&
-                        _detailAddressTextController.text.isNotEmpty &&
-                        _costTextController.text.isNotEmpty &&
-                        _selectedCategoryIndex != null)
-                      await model.uploadPost(
-                        _titleTextController.text,
-                        _contentTextController.text,
-                        _localSelectedValue!,
-                        15,
-                        DateTime.now(),
-                        'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
-                        convertXFilesToFiles(_images),
-                        _addressTextController.text,
-                        _detailAddressTextController.text,
-                        categories[_selectedCategoryIndex!],
-                        saveToDatabase(),
+                    if (_isLocalSelectedValid &&
+                        _isTitleValid &&
+                        _isContentValid &&
+                        _isAddressValid &&
+                        _isDetailAddressValid &&
+                        _isCostValid &&
+                        _isSelectedValid) {
+                      // 로딩 스피너 표시
+                      showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return Center(
+                            child: CircularProgressIndicator(),
+                          );
+                        },
                       );
-                    if (mounted) {
-                      Navigator.pop(context);
+
+                      try {
+                        // 업로드 처리
+                        await model.uploadPost(
+                          _titleTextController.text,
+                          _contentTextController.text,
+                          _localSelectedValue!,
+                          15,
+                          DateTime.now(),
+                          'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
+                          convertXFilesToFiles(_images),
+                          _addressTextController.text,
+                          _detailAddressTextController.text,
+                          categories[_selectedCategoryIndex!],
+                          saveToDatabase(),
+                        );
+
+                        // 업로드가 완료되면 다이얼로그 닫고 화면 이동
+                        if (mounted) {
+                          Navigator.pop(context); // 로딩 스피너 닫기
+                          Navigator.pop(context); // 이전 화면으로 돌아가기
+                        }
+                      } catch (e) {
+                        Navigator.pop(context); // 로딩 스피너 닫기
+                        // 에러 처리 (예: 스낵바로 오류 메시지 표시)
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("업로드 중 오류가 발생했습니다."),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    } else {
+                      // 필수 입력 항목이 누락되었을 때 알림
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text("모든 필드를 올바르게 입력해주세요."),
+                          backgroundColor: Colors.red,
+                        ),
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(
