@@ -18,6 +18,72 @@ class CreatePost extends StatefulWidget {
 class _CreatePostState extends State<CreatePost> {
   final model = new CreateModel();
 
+///////////////////////////////////////////////////////////////날짜 시간 입력받는 기능
+  DateTime? _selectedDate;
+  TimeOfDay? _selectedTime;
+
+  // 날짜 선택 함수
+  Future<void> _pickDate(BuildContext context) async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+    );
+    if (pickedDate != null) {
+      setState(() {
+        _selectedDate = pickedDate;
+      });
+    }
+  }
+
+  // 시간 선택 함수
+  Future<void> _pickTime(BuildContext context) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.now(),
+    );
+    if (pickedTime != null) {
+      setState(() {
+        _selectedTime = pickedTime;
+      });
+    }
+  }
+
+  // 날짜와 시간을 하나의 문자열로 형식화
+  String _formatDateTime() {
+    if (_selectedDate == null || _selectedTime == null) {
+      return '날짜와 시간을 선택하세요';
+    }
+    final date =
+        "${_selectedDate!.year}-${_selectedDate!.month}-${_selectedDate!.day}";
+    final time =
+        "${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}";
+    return "$date $time";
+  }
+
+  // 날짜와 시간을 하나의 DateTime 객체로 생성
+  void _combineDateAndTime() {
+    if (_selectedDate != null && _selectedTime != null) {
+      setState(() {
+        _dateTime = DateTime(
+          _selectedDate!.year,
+          _selectedDate!.month,
+          _selectedDate!.day,
+          _selectedTime!.hour,
+          _selectedTime!.minute,
+        );
+        _isDateTimeValid = true; // 유효성 통과
+      });
+    }else {
+      setState(() {
+        _isDateTimeValid = false; // 유효성 미통과
+      });
+    }
+    return null;
+  }
+  /////////////////////////////////////////////////////////////////
+
   ////////////////////////////////////////////////////////// firebase에 넣을 변수들, 컨트롤러들
   final _titleTextController = TextEditingController(); //제목 컨트롤러
   int? _selectedCategoryIndex; // 선택된 카테고리의 인덱스
@@ -36,6 +102,7 @@ class _CreatePostState extends State<CreatePost> {
   String? _localSelectedValue; //지역 드롭다운버튼 값
   final _addressTextController = TextEditingController(); //활동장소 컨트롤러
   final _detailAddressTextController = TextEditingController(); //상세주소 컨트롤러
+  DateTime? _dateTime;  //날짜 시간
   final _costTextController = TextEditingController(); //예상 활동금액 컨트롤러
   String? _limitSelectedValue; //불참 횟수 드롭다운버튼 값
   final _contentTextController = TextEditingController(); //게시글 내용 컨트롤러
@@ -61,6 +128,7 @@ class _CreatePostState extends State<CreatePost> {
   bool _isCostValid = true;
   bool _isContentValid = true;
   bool _isSelectedValid = true;
+  bool _isDateTimeValid = true;
 
   void _validateFields() {
     setState(() {
@@ -71,9 +139,21 @@ class _CreatePostState extends State<CreatePost> {
       _isCostValid = _costTextController.text.isNotEmpty;
       _isContentValid = _contentTextController.text.isNotEmpty;
       _isSelectedValid = _selectedCategoryIndex != null;
+      _isDateTimeValid = _dateTime != null;
     });
   }
- //에러 메시지
+
+  // 에러 border
+  OutlineInputBorder customInputBorder(
+      bool isValid, Color enabledColor, Color errorColor) {
+    return OutlineInputBorder(
+      borderSide: BorderSide(
+        color: isValid ? enabledColor : errorColor,
+      ),
+    );
+  }
+
+  //에러 메시지
   Widget buildErrorIndicator(bool isValid, String message) {
     if (isValid) return SizedBox.shrink(); // 유효할 경우 아무것도 표시하지 않음
 
@@ -276,17 +356,18 @@ class _CreatePostState extends State<CreatePost> {
               controller: _titleTextController,
               decoration: InputDecoration(
                 hintText: '제목',
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _isTitleValid ? Colors.grey : Colors.red,
-                  ),
-                ),
+                enabledBorder:
+                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                focusedBorder:
+                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(
+                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               onChanged: (_) {
                 if (!_isTitleValid) setState(() => _isTitleValid = true);
               },
             ),
-            buildErrorIndicator(_isTitleValid,"입력해주세요"),
+            buildErrorIndicator(_isTitleValid, "제목을 입력해주세요."),
             SizedBox(height: 16),
             Text('모집 분야',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -305,6 +386,7 @@ class _CreatePostState extends State<CreatePost> {
                 );
               }),
             ),
+            buildErrorIndicator(_isSelectedValid, "모집분야를 선택해주세요."),
             SizedBox(height: 16),
             Text('지역',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -312,11 +394,12 @@ class _CreatePostState extends State<CreatePost> {
             DropdownButtonFormField<String>(
               value: _localSelectedValue,
               decoration: InputDecoration(
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _isLocalSelectedValid ? Colors.grey : Colors.red,
-                  ),
-                ),
+                enabledBorder: customInputBorder(
+                    _isLocalSelectedValid, Colors.grey, Colors.red),
+                focusedBorder: customInputBorder(
+                    _isLocalSelectedValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(
+                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               hint: Text('지역을 선택해주세요.'),
               items: ['서울특별시', '부산광역시', '대구광역시']
@@ -332,7 +415,7 @@ class _CreatePostState extends State<CreatePost> {
                 });
               },
             ),
-            buildErrorIndicator(_isLocalSelectedValid,"입력해주세요"),
+            buildErrorIndicator(_isLocalSelectedValid, "지역을 선택해주세요."),
             SizedBox(height: 16),
             Text(
               '활동 장소',
@@ -347,11 +430,12 @@ class _CreatePostState extends State<CreatePost> {
                     readOnly: true,
                     decoration: InputDecoration(
                       hintText: '기본주소',
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                          color: _isAddressValid ? Colors.grey : Colors.red,
-                        ),
-                      ),
+                      enabledBorder: customInputBorder(
+                          _isAddressValid, Colors.grey, Colors.red),
+                      focusedBorder: customInputBorder(
+                          _isAddressValid, Colors.blue, Colors.red),
+                      errorBorder: customInputBorder(false, Colors.grey,
+                          Colors.red), // errorBorder는 항상 빨간색
                     ),
                     onChanged: (_) {
                       if (!_isAddressValid)
@@ -359,8 +443,6 @@ class _CreatePostState extends State<CreatePost> {
                     },
                   ),
                 ),
-                buildErrorIndicator(_isAddressValid,"입력해주세요"),
-
                 SizedBox(width: 8),
                 ElevatedButton(
                   onPressed: () async {
@@ -394,23 +476,52 @@ class _CreatePostState extends State<CreatePost> {
                 ),
               ],
             ),
+            buildErrorIndicator(_isAddressValid, "주소를 입력해주세요."),
             SizedBox(height: 8),
             TextField(
               controller: _detailAddressTextController,
               decoration: InputDecoration(
                 hintText: '상세주소',
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _isDetailAddressValid ? Colors.grey : Colors.red,
-                  ),
-                ),
+                enabledBorder: customInputBorder(
+                    _isDetailAddressValid, Colors.grey, Colors.red),
+                focusedBorder: customInputBorder(
+                    _isDetailAddressValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(
+                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               onChanged: (_) {
                 if (!_isDetailAddressValid)
                   setState(() => _isDetailAddressValid = true);
               },
             ),
-            buildErrorIndicator(_isDetailAddressValid,"입력해주세요"),
+            buildErrorIndicator(_isDetailAddressValid, "상세주소를 입력해주세요."),
+            SizedBox(height: 16),
+            Text(
+              '날짜와 시간',
+              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            SizedBox(height: 8),
+            TextField(
+              readOnly: true,
+              decoration: InputDecoration(
+                hintText: _formatDateTime(),
+                enabledBorder: customInputBorder(
+                    _isDateTimeValid, Colors.grey, Colors.red),
+                focusedBorder: customInputBorder(
+                    _isDateTimeValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(false, Colors.grey,
+                    Colors.red), // errorBorder는 항상 빨간색
+                suffixIcon: Icon(Icons.calendar_today),
+              ),
+              onTap: () async {
+                await _pickDate(context);
+                if (_selectedDate != null) {
+                  await _pickTime(context);
+                }
+                _combineDateAndTime();
+              },
+            ),
+            buildErrorIndicator(_isDateTimeValid, "날짜,시간을 입력해주세요."),
             SizedBox(height: 16),
             Text('모집 인원',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -418,7 +529,12 @@ class _CreatePostState extends State<CreatePost> {
             TextField(
               decoration: InputDecoration(
                 hintText: '모집 인원을 입력해주세요.',
-                border: OutlineInputBorder(),
+                enabledBorder:
+                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                focusedBorder:
+                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(
+                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               keyboardType: TextInputType.number,
             ),
@@ -437,18 +553,19 @@ class _CreatePostState extends State<CreatePost> {
               controller: _costTextController,
               decoration: InputDecoration(
                 hintText: '₩ 활동금액을 입력해주세요.',
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _isCostValid ? Colors.grey : Colors.red,
-                  ),
-                ),
+                enabledBorder:
+                    customInputBorder(_isCostValid, Colors.grey, Colors.red),
+                focusedBorder:
+                    customInputBorder(_isCostValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(
+                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               keyboardType: TextInputType.number,
               onChanged: (_) {
                 if (!_isCostValid) setState(() => _isCostValid = true);
               },
             ),
-            buildErrorIndicator(_isCostValid,"입력해주세요"),
+            buildErrorIndicator(_isCostValid, "활동금액을 입력해주세요."),
             SizedBox(height: 16),
             Text('불참 횟수 제한',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -456,7 +573,12 @@ class _CreatePostState extends State<CreatePost> {
             DropdownButtonFormField<String>(
               value: _limitSelectedValue,
               decoration: InputDecoration(
-                border: OutlineInputBorder(),
+                enabledBorder:
+                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                focusedBorder:
+                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(
+                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               hint: Text('불참 횟수를 선택해주세요.'),
               items: ['1회', '2회', '3회', '무제한']
@@ -479,18 +601,19 @@ class _CreatePostState extends State<CreatePost> {
               controller: _contentTextController,
               decoration: InputDecoration(
                 hintText: '모집글 내용을 작성해주세요.',
-                border: OutlineInputBorder(
-                  borderSide: BorderSide(
-                    color: _isContentValid ? Colors.grey : Colors.red,
-                  ),
-                ),
+                enabledBorder:
+                    customInputBorder(_isContentValid, Colors.grey, Colors.red),
+                focusedBorder:
+                    customInputBorder(_isContentValid, Colors.blue, Colors.red),
+                errorBorder: customInputBorder(
+                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               maxLines: 3,
               onChanged: (_) {
                 if (!_isContentValid) setState(() => _isContentValid = true);
               },
             ),
-            buildErrorIndicator(_isContentValid,"입력해주세요"),
+            buildErrorIndicator(_isContentValid, "모집글 내용을 입력해주세요."),
             SizedBox(height: 24),
             Center(
               child: SizedBox(

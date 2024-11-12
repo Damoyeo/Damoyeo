@@ -95,7 +95,8 @@ class _PostDetailState extends State<PostDetail> {
                 expandedHeight: _size.width,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
-                  title: SmoothPageIndicator(
+                  title: _urls.isNotEmpty
+                      ? SmoothPageIndicator(
                     controller: _pageController,
                     count: _urls.length,
                     effect: WormEffect(
@@ -112,22 +113,33 @@ class _PostDetailState extends State<PostDetail> {
                         curve: Curves.easeInOut,
                       );
                     },
-                  ),
+                  )
+                      : null,
                   centerTitle: true,
-                  background: PageView.builder(
+                  background: _urls.isNotEmpty
+                      ? PageView.builder(
                     controller: _pageController,
                     allowImplicitScrolling: true,
                     itemBuilder: (context, item) {
                       return CachedNetworkImage(
                         imageUrl: _urls[item],
-                        placeholder: (context, url) =>
-                            CircularProgressIndicator(),
+                        placeholder: (context, url) => CircularProgressIndicator(),
                         errorWidget: (context, url, error) => Icon(Icons.error),
                         fit: BoxFit.cover,
                         scale: 0.1,
                       );
                     },
                     itemCount: _urls.length,
+                  )
+                      : Container(
+                    color: Colors.grey,
+                    child: Center(
+                      child: Icon(
+                        Icons.image,
+                        color: Colors.white,
+                        size: 100,
+                      ),
+                    ),
                   ),
                 ),
               ),
