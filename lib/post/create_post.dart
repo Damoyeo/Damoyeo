@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gomoph/models//create_model.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:intl/intl.dart';
 import 'package:kpostal/kpostal.dart';
 
 class CreatePost extends StatefulWidget {
@@ -20,68 +21,57 @@ class _CreatePostState extends State<CreatePost> {
 
 ///////////////////////////////////////////////////////////////날짜 시간 입력받는 기능
   DateTime? _selectedDate;
-  TimeOfDay? _selectedTime;
 
-  // 날짜 선택 함수
-  Future<void> _pickDate(BuildContext context) async {
+  // 날짜와 시간 선택 함수
+  Future<void> _pickDateTime(BuildContext context) async {
+    // 날짜 선택
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
     );
-    if (pickedDate != null) {
-      setState(() {
-        _selectedDate = pickedDate;
-      });
-    }
-  }
 
-  // 시간 선택 함수
-  Future<void> _pickTime(BuildContext context) async {
-    final TimeOfDay? pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.now(),
-    );
-    if (pickedTime != null) {
-      setState(() {
-        _selectedTime = pickedTime;
-      });
+    if (pickedDate != null) {
+      // 시간 선택
+      final TimeOfDay? pickedTime = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.now(),
+      );
+
+      if (pickedTime != null) {
+        // DateTime에 시간 설정
+        setState(() {
+          _selectedDate = DateTime(
+            pickedDate.year,
+            pickedDate.month,
+            pickedDate.day,
+            pickedTime.hour,
+            pickedTime.minute,
+          );
+        });
+        print(_selectedDate);
+      } else {
+        // 시간을 선택하지 않은 경우, 날짜만 저장
+        setState(() {
+          _selectedDate = pickedDate;
+        });
+        print(_selectedDate);
+      }
     }
   }
 
   // 날짜와 시간을 하나의 문자열로 형식화
-  String _formatDateTime() {
-    if (_selectedDate == null || _selectedTime == null) {
-      return '날짜와 시간을 선택하세요';
+  String _formatDateTime(DateTime? selectedDate) {
+    if (selectedDate == null) {
+      return '날짜를 선택해주세요.';
     }
-    final date =
-        "${_selectedDate!.year}-${_selectedDate!.month}-${_selectedDate!.day}";
-    final time =
-        "${_selectedTime!.hour}:${_selectedTime!.minute.toString().padLeft(2, '0')}";
-    return "$date $time";
+
+    // 날짜를 "MM월 dd일 HH:mm" 형식으로 변환
+    final DateFormat formatter = DateFormat('MM월 dd일 HH:mm');
+    return formatter.format(selectedDate);
   }
 
-  // 날짜와 시간을 하나의 DateTime 객체로 생성
-  void _combineDateAndTime() {
-    if (_selectedDate != null && _selectedTime != null) {
-      setState(() {
-        _dateTime = DateTime(
-          _selectedDate!.year,
-          _selectedDate!.month,
-          _selectedDate!.day,
-          _selectedTime!.hour,
-          _selectedTime!.minute,
-        );
-        _isDateTimeValid = true; // 유효성 통과
-      });
-    }else {
-      setState(() {
-        _isDateTimeValid = false; // 유효성 미통과
-      });
-    }
-    return null;
-  }
   /////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////// firebase에 넣을 변수들, 컨트롤러들
@@ -102,10 +92,10 @@ class _CreatePostState extends State<CreatePost> {
   String? _localSelectedValue; //지역 드롭다운버튼 값
   final _addressTextController = TextEditingController(); //활동장소 컨트롤러
   final _detailAddressTextController = TextEditingController(); //상세주소 컨트롤러
-  DateTime? _dateTime;  //날짜 시간
   final _costTextController = TextEditingController(); //예상 활동금액 컨트롤러
   String? _limitSelectedValue; //불참 횟수 드롭다운버튼 값
   final _contentTextController = TextEditingController(); //게시글 내용 컨트롤러
+  final _recruitTextController = TextEditingController(); //모집인원 컨트롤러
 
   @override
   void dispose() {
@@ -115,6 +105,7 @@ class _CreatePostState extends State<CreatePost> {
     _detailAddressTextController.dispose();
     _costTextController.dispose();
     _contentTextController.dispose();
+    _recruitTextController.dispose();
     super.dispose();
   }
 
@@ -129,6 +120,7 @@ class _CreatePostState extends State<CreatePost> {
   bool _isContentValid = true;
   bool _isSelectedValid = true;
   bool _isDateTimeValid = true;
+  bool _isRecruitValid = true;
 
   void _validateFields() {
     setState(() {
@@ -139,7 +131,8 @@ class _CreatePostState extends State<CreatePost> {
       _isCostValid = _costTextController.text.isNotEmpty;
       _isContentValid = _contentTextController.text.isNotEmpty;
       _isSelectedValid = _selectedCategoryIndex != null;
-      _isDateTimeValid = _dateTime != null;
+      _isDateTimeValid = _selectedDate != null;
+      _isRecruitValid = _recruitTextController.text.isNotEmpty;
     });
   }
 
@@ -504,21 +497,17 @@ class _CreatePostState extends State<CreatePost> {
             TextField(
               readOnly: true,
               decoration: InputDecoration(
-                hintText: _formatDateTime(),
+                hintText: _formatDateTime(_selectedDate),
                 enabledBorder: customInputBorder(
                     _isDateTimeValid, Colors.grey, Colors.red),
                 focusedBorder: customInputBorder(
                     _isDateTimeValid, Colors.blue, Colors.red),
-                errorBorder: customInputBorder(false, Colors.grey,
-                    Colors.red), // errorBorder는 항상 빨간색
+                errorBorder: customInputBorder(false, Colors.grey, Colors.red),
+                // errorBorder는 항상 빨간색
                 suffixIcon: Icon(Icons.calendar_today),
               ),
               onTap: () async {
-                await _pickDate(context);
-                if (_selectedDate != null) {
-                  await _pickTime(context);
-                }
-                _combineDateAndTime();
+                await _pickDateTime(context);
               },
             ),
             buildErrorIndicator(_isDateTimeValid, "날짜,시간을 입력해주세요."),
@@ -527,17 +516,22 @@ class _CreatePostState extends State<CreatePost> {
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
             TextField(
+              controller: _recruitTextController,
               decoration: InputDecoration(
                 hintText: '모집 인원을 입력해주세요.',
                 enabledBorder:
-                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                    customInputBorder(_isRecruitValid, Colors.grey, Colors.red),
                 focusedBorder:
-                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                    customInputBorder(_isRecruitValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               keyboardType: TextInputType.number,
+              onChanged: (_) {
+                if (!_isRecruitValid) setState(() => _isRecruitValid = true);
+              },
             ),
+            buildErrorIndicator(_isRecruitValid, "모집인원을 입력해주세요."),
             SizedBox(height: 16),
             Text('예상 활동 금액',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
@@ -628,7 +622,9 @@ class _CreatePostState extends State<CreatePost> {
                         _isAddressValid &&
                         _isDetailAddressValid &&
                         _isCostValid &&
-                        _isSelectedValid) {
+                        _isSelectedValid &&
+                        _isDateTimeValid &&
+                        _isRecruitValid) {
                       // 로딩 스피너 표시
                       showDialog(
                         context: context,
@@ -646,7 +642,7 @@ class _CreatePostState extends State<CreatePost> {
                           _titleTextController.text,
                           _contentTextController.text,
                           _localSelectedValue!,
-                          15,
+                          int.parse(_recruitTextController.text),
                           DateTime.now(),
                           'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
                           convertXFilesToFiles(_images),
@@ -654,6 +650,7 @@ class _CreatePostState extends State<CreatePost> {
                           _detailAddressTextController.text,
                           categories[_selectedCategoryIndex!],
                           saveToDatabase(),
+                          _selectedDate!,
                         );
 
                         // 업로드가 완료되면 다이얼로그 닫고 화면 이동

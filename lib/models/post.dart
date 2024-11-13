@@ -14,6 +14,7 @@ class Post {
   String detailAddress;
   String category;
   int cost;
+  DateTime meetingTime;
 
   Post({
     required this.id,
@@ -27,7 +28,8 @@ class Post {
     required this.address,
     required this.detailAddress,
     required this.category,
-    required this.cost
+    required this.cost,
+    required this.meetingTime,
   });
 
   // Firestore 데이터를 Post 객체로 변환
@@ -45,6 +47,7 @@ class Post {
       detailAddress: json['detailAddress'] as String? ?? 'Unknown detail address', // 기본값 설정
       category: json['category'] as String? ?? 'General', // 기본값 설정
       cost: json['cost'] as int? ?? 0, // 기본값 설정
+      meetingTime: (json['meetingTime'] as Timestamp?)?.toDate() ?? DateTime.now(), // null 체크 및 기본값 설정
     );
   }
 
@@ -62,7 +65,8 @@ class Post {
       'address': address,
       'detailAddress': detailAddress,
       'category': category,
-      'cost': cost
+      'cost': cost,
+      'meetingTime' : Timestamp.fromDate(meetingTime),
     };
   }
 }

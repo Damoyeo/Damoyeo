@@ -1,5 +1,6 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 
 import '../models/post.dart';
@@ -27,6 +28,17 @@ class _PostDetailState extends State<PostDetail> {
   void dispose() {
     _pageController.dispose(); // 컨트롤러 해제
     super.dispose();
+  }
+
+  // 날짜와 시간을 하나의 문자열로 형식화
+  String _formatDateTime(DateTime? selectedDate) {
+    if (selectedDate == null) {
+      return '날짜가 정해지지 않았습니다.';
+    }
+
+    // 날짜를 "MM월 dd일 HH:mm" 형식으로 변환
+    final DateFormat formatter = DateFormat('MM월 dd일 HH:mm');
+    return formatter.format(selectedDate);
   }
 
   @override
@@ -177,20 +189,17 @@ class _PostDetailState extends State<PostDetail> {
                         ),
                       ),
                       SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Text(
-                            widget.post.title,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
+                      Text(
+                        widget.post.title,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        softWrap: true, // 자동 줄바꿈
                       ),
                       SizedBox(height: 8),
                       Text(
-                        '10월 15일 17:00~19:00\n${widget.post.address} ${widget.post.detailAddress}',
+                        '${_formatDateTime(widget.post.meetingTime)}\n${widget.post.address} ${widget.post.detailAddress}',
                         style: TextStyle(
                           fontSize: 14,
                           color: Colors.grey[600],
