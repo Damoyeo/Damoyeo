@@ -1,8 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:gomoph/tab/chat/chat_detail_page.dart';
 import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
-
+import '../tab/chat/chat_page.dart';
 import '../models/post.dart';
 
 class PostDetail extends StatefulWidget {
@@ -44,6 +46,11 @@ class _PostDetailState extends State<PostDetail> {
   @override
   Widget build(BuildContext context) {
     final List<String> _urls = widget.post.imageUrls;
+    //현재 사용자인지 확인하기 위함
+    final String? currentUserId = FirebaseAuth.instance.currentUser?.uid;
+    print("currentUserId: $currentUserId");
+    print("postId: ${widget.post.id}");
+
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         Size _size = MediaQuery.of(context).size;
@@ -184,7 +191,30 @@ class _PostDetailState extends State<PostDetail> {
                                 ),
                               ],
                             ),
-                            Icon(Icons.send, color: Colors.blue),
+                            //현재 사용자가 작성자가 아닐 때만 버튼을 표시한다
+                            if (widget.post.id != currentUserId)
+                              IconButton(
+                              icon: Icon(Icons.send, color: Colors.blue),
+                                onPressed: () async {
+                                // 채팅방 ID를 가져오거나
+                                  final chatPage = ChatPage(); //ChatPage인스턴스 생성
+                                  final chatRoomId = await chatPage.createOrGetChatRoom(widget.post.id);
+
+                                  // 채팅방이 정상적으로 생성되거나 가져왔을 경우에만 이동
+                                  if (chatRoomId != null) {
+                                    // 채팅방 화면으로 네비게이트
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => ChatDetailPage(
+                                            chatId: chatRoomId,
+                                            otherUserId: widget.post.id,
+                                        ), // ChatScreen은 채팅 화면 위젯
+                                      ),
+                                    );
+                                  }
+                                },
+                              ),
                           ],
                         ),
                       ),
