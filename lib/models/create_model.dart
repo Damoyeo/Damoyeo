@@ -18,6 +18,7 @@ class CreateModel {
     String detailAddress,
     String category,
     int cost,
+    DateTime meetingTime,
   ) async {
     /////////이미지 저장 후 리스트 리턴
     List<String> imageUrls = [];
@@ -46,7 +47,8 @@ class CreateModel {
         address: address,
         detailAddress: detailAddress,
         category: category,
-        cost: cost));
+        cost: cost,
+        meetingTime : meetingTime));
   }
 
   // 이미지를 firestore에 올리고 url을 리턴
