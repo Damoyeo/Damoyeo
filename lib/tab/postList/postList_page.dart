@@ -6,7 +6,7 @@ import '../../models/post.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class PostListPage extends StatefulWidget {
-  const PostListPage({super.key});
+  const PostListPage({Key? key}) : super(key: key);
 
   @override
   _PostListPageState createState() => _PostListPageState();
