@@ -8,8 +8,13 @@ class Post {
   String tag;
   int recruit;
   DateTime createdAt;
-  String imageUrl;
+  String imageUrl;// 이미지 URL 필드 추가 (nullable)
   List<String> imageUrls;
+  String address;
+  String detailAddress;
+  String category;
+  int cost;
+  DateTime meetingTime;
 
   Post({
     required this.id,
@@ -19,7 +24,12 @@ class Post {
     required this.createdAt,
     required this.recruit,
     required this.imageUrl,
-    required this.imageUrls,
+    required this.imageUrls, // 생성자에 imageUrl 추가
+    required this.address,
+    required this.detailAddress,
+    required this.category,
+    required this.cost,
+    required this.meetingTime,
   });
 
   // Firestore 데이터를 Post 객체로 변환
@@ -32,7 +42,12 @@ class Post {
       createdAt: (json['createdAt'] as Timestamp).toDate(),
       recruit: json['recruit'] as int,
       imageUrl: json['imageUrl'] as String,
-      imageUrls: List<String>.from(json['imageUrls'] ?? []),
+      imageUrls: List<String>.from(json['imageUrls'] ?? []), // 안전하게 리스트 변환
+      address: json['address'] as String? ?? 'Unknown address', // 기본값 설정
+      detailAddress: json['detailAddress'] as String? ?? 'Unknown detail address', // 기본값 설정
+      category: json['category'] as String? ?? 'General', // 기본값 설정
+      cost: json['cost'] as int? ?? 0, // 기본값 설정
+      meetingTime: (json['meetingTime'] as Timestamp?)?.toDate() ?? DateTime.now(), // null 체크 및 기본값 설정
     );
   }
 
@@ -46,53 +61,12 @@ class Post {
       'createdAt': Timestamp.fromDate(createdAt),
       'recruit': recruit,
       'imageUrl': imageUrl,
-      'imageUrls': imageUrls,
+      'imageUrls': imageUrls,// imageUrl 필드 추가
+      'address': address,
+      'detailAddress': detailAddress,
+      'category': category,
+      'cost': cost,
+      'meetingTime' : Timestamp.fromDate(meetingTime),
     };
-  }
-
-  // 찜 추가 메서드
-  Future<void> addFavorite() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      final favoriteRef = FirebaseFirestore.instance
-          .collection('posts')
-          .doc(id)
-          .collection('favorites')
-          .doc(userId);
-
-      await favoriteRef.set({
-        'user_id': userId,
-        'favoritedAt': FieldValue.serverTimestamp(), // 찜한 시간
-      });
-    }
-  }
-
-  // 찜 제거 메서드
-  Future<void> removeFavorite() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId != null) {
-      final favoriteRef = FirebaseFirestore.instance
-          .collection('posts')
-          .doc(id)
-          .collection('favorites')
-          .doc(userId);
-
-      await favoriteRef.delete();
-    }
-  }
-
-  // 찜 여부 확인 메서드
-  Future<bool> isFavorite() async {
-    final userId = FirebaseAuth.instance.currentUser?.uid;
-    if (userId == null) return false;
-
-    final favoriteDoc = await FirebaseFirestore.instance
-        .collection('posts')
-        .doc(id)
-        .collection('favorites')
-        .doc(userId)
-        .get();
-
-    return favoriteDoc.exists;
   }
 }
