@@ -167,6 +167,7 @@ class _PostListPageState extends State<PostListPage> {
               final userId = getCurrentUserId();
 
               return Card(
+
                 margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: ListTile(
                   leading: Container(
@@ -184,18 +185,15 @@ class _PostListPageState extends State<PostListPage> {
                       Text(post.content.length > 15
                           ? '${post.content.substring(0, 15)}...'
                           : post.content),
+                      // 15글자까지만 표시하고 나머지는 생략
                       Text('지역: ${post.tag}'),
-                      FutureBuilder<int>(
-                        future: _getProposersCount(post.id),
-                        builder: (context, snapshot) {
-                          final proposersCount = snapshot.data ?? 0;
-                          return Text('참여인원 $proposersCount/${post.recruit}');
-                        },
-                      ),
+                      Text('모집인원 ${post.recruit}'),
                     ],
                   ),
                   trailing: FutureBuilder<bool>(
-                    future: userId != null ? _isLiked(post.id, userId!) : Future.value(false),
+                    future: userId != null
+                        ? _isLiked(post.id, userId!)
+                        : Future.value(false),
                     builder: (context, snapshot) {
                       bool isLiked = snapshot.data ?? false;
                       return IconButton(
@@ -223,7 +221,6 @@ class _PostListPageState extends State<PostListPage> {
                   },
                 ),
               );
-
             },
           );
         },
@@ -246,7 +243,7 @@ class _PostListPageState extends State<PostListPage> {
     final user = FirebaseAuth.instance.currentUser;
     return user?.uid;
   }
-// -----------------------------------------------------------------------좋아요 관련
+
   Future<bool> _isLiked(String postId, String userId) async {
     final favoriteRef = FirebaseFirestore.instance
         .collection('posts')
@@ -275,7 +272,6 @@ class _PostListPageState extends State<PostListPage> {
     }
     setState(() {});
   }
-// -----------------------------------------------------------------------좋아요 관련
 
   // 필터 모달 시트를 표시하는 함수
   void _showFilterOptions(BuildContext context) {
@@ -304,14 +300,5 @@ class _PostListPageState extends State<PostListPage> {
         );
       },
     );
-  }
- // 신청자 proposers 카운트하는 함수
-  Future<int> _getProposersCount(String postId) async {
-    final collection = FirebaseFirestore.instance
-        .collection('posts')
-        .doc(postId)
-        .collection('proposers');
-    final querySnapshot = await collection.get();
-    return querySnapshot.size;
   }
 }

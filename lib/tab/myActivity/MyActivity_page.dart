@@ -131,11 +131,17 @@ class _MyActivityPageState extends State<MyActivityPage>
                     future: _getProposersCount(post.id),
                     builder: (context, snapshot) {
                       final proposersCount = snapshot.data ?? 0;
-                      return PostCard(
-                        post: post,
-                        proposersCount: proposersCount,
-                        isFavorite: snapshot.hasData,
-                        onFavoriteToggle: () => _toggleFavorite(post.id),
+                      return FutureBuilder<bool>(
+                        future: _isLiked(post.id),
+                        builder: (context, isLikedSnapshot) {
+                          final isFavorite = isLikedSnapshot.data ?? false;
+                          return PostCard(
+                            post: post,
+                            proposersCount: proposersCount,
+                            isFavorite: isFavorite,
+                            onFavoriteToggle: () => _toggleFavorite(post.id),
+                          );
+                        },
                       );
                     },
                   );
@@ -165,11 +171,17 @@ class _MyActivityPageState extends State<MyActivityPage>
                     future: _getProposersCount(post.id),
                     builder: (context, snapshot) {
                       final proposersCount = snapshot.data ?? 0;
-                      return PostCard(
-                        post: post,
-                        proposersCount: proposersCount,
-                        isFavorite: snapshot.hasData,
-                        onFavoriteToggle: () => _toggleFavorite(post.id),
+                      return FutureBuilder<bool>(
+                        future: _isLiked(post.id),
+                        builder: (context, isLikedSnapshot) {
+                          final isFavorite = isLikedSnapshot.data ?? false;
+                          return PostCard(
+                            post: post,
+                            proposersCount: proposersCount,
+                            isFavorite: isFavorite,
+                            onFavoriteToggle: () => _toggleFavorite(post.id),
+                          );
+                        },
                       );
                     },
                   );
