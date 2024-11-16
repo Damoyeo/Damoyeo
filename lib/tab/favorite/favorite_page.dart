@@ -197,50 +197,52 @@ class _FavoritePageState extends State<FavoritePage> {
               final userId = getCurrentUserId();
 
               return Card(
-                margin: EdgeInsets.only(bottom: 8),
+                margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: ListTile(
                   leading: Container(
                     width: 50.0,
                     height: 50.0,
                     color: Colors.grey[300],
-                    child: post.imageUrl.isNotEmpty
-                        ? Image.network(post.imageUrl, fit: BoxFit.cover)
+                    child: post.imageUrl != null
+                        ? Image.network(post.imageUrl!, fit: BoxFit.cover)
                         : Icon(Icons.image, color: Colors.white),
                   ),
                   title: Text(post.title),
                   subtitle: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        post.content.length > 15
-                            ? '${post.content.substring(0, 15)}...'
-                            : post.content,
-                      ),
+                      Text(post.content.length > 15
+                          ? '${post.content.substring(0, 15)}...'
+                          : post.content),
                       Text('지역: ${post.tag}'),
-                      Text('모집인원 ${post.recruit}'),
+                      FutureBuilder<int>(
+                        future: _getProposersCount(post.id),
+                        builder: (context, snapshot) {
+                          final proposersCount = snapshot.data ?? 0;
+                          return Text('참여인원 $proposersCount/${post.recruit}');
+                        },
+                      ),
                     ],
                   ),
-                    trailing: FutureBuilder<bool>(
-                      future: userId != null
-                          ? _isLiked(post.id, userId!)
-                          : Future.value(false),
-                      builder: (context, snapshot) {
-                        bool isLiked = snapshot.data ?? false;
-                        return IconButton(
-                          icon: Icon(
-                            isLiked ? Icons.favorite : Icons.favorite_border,
-                            color: isLiked ? Colors.red : null,
-                          ),
-                          onPressed: () {
-                            if (userId != null) {
-                              _toggleFavorite(post.id, userId!);
-                            } else {
-                              print("User not logged in");
-                            }
-                          },
-                        );
-                      },
-                    ),
+                  trailing: FutureBuilder<bool>(
+                    future: userId != null ? _isLiked(post.id, userId!) : Future.value(false),
+                    builder: (context, snapshot) {
+                      bool isLiked = snapshot.data ?? false;
+                      return IconButton(
+                        icon: Icon(
+                          isLiked ? Icons.favorite : Icons.favorite_border,
+                          color: isLiked ? Colors.red : null,
+                        ),
+                        onPressed: () {
+                          if (userId != null) {
+                            _toggleFavorite(post.id, userId!);
+                          } else {
+                            print("User not logged in");
+                          }
+                        },
+                      );
+                    },
+                  ),
                   onTap: () {
                     Navigator.push(
                       context,
@@ -291,5 +293,15 @@ class _FavoritePageState extends State<FavoritePage> {
       });
     }
     setState(() {});
+  }
+
+  // 신청자 proposers 카운트하는 함수
+  Future<int> _getProposersCount(String postId) async {
+    final collection = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('proposers');
+    final querySnapshot = await collection.get();
+    return querySnapshot.size;
   }
 }

@@ -49,6 +49,15 @@ class _MyActivityPageState extends State<MyActivityPage>
     });
   }
 
+  Future<int> _getProposersCount(String postId) async {
+    final collection = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('proposers');
+    final querySnapshot = await collection.get();
+    return querySnapshot.size;
+  }
+
   Future<bool> _isLiked(String postId) async {
     final favoriteRef = FirebaseFirestore.instance
         .collection('posts')
@@ -118,10 +127,17 @@ class _MyActivityPageState extends State<MyActivityPage>
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
                   final post = posts[index];
-                  return PostCard(
-                    post: post,
-                    isFavorite: true, // 내가 작성한 글이므로 찜 상태는 true
-                    onFavoriteToggle: () => _toggleFavorite(post.id),
+                  return FutureBuilder<int>(
+                    future: _getProposersCount(post.id),
+                    builder: (context, snapshot) {
+                      final proposersCount = snapshot.data ?? 0;
+                      return PostCard(
+                        post: post,
+                        proposersCount: proposersCount,
+                        isFavorite: snapshot.hasData,
+                        onFavoriteToggle: () => _toggleFavorite(post.id),
+                      );
+                    },
                   );
                 },
               );
@@ -145,13 +161,14 @@ class _MyActivityPageState extends State<MyActivityPage>
                 itemCount: posts.length,
                 itemBuilder: (context, index) {
                   final post = posts[index];
-                  return FutureBuilder<bool>(
-                    future: _isLiked(post.id),
+                  return FutureBuilder<int>(
+                    future: _getProposersCount(post.id),
                     builder: (context, snapshot) {
-                      bool isFavorite = snapshot.data ?? false;
+                      final proposersCount = snapshot.data ?? 0;
                       return PostCard(
                         post: post,
-                        isFavorite: isFavorite,
+                        proposersCount: proposersCount,
+                        isFavorite: snapshot.hasData,
                         onFavoriteToggle: () => _toggleFavorite(post.id),
                       );
                     },
@@ -166,15 +183,16 @@ class _MyActivityPageState extends State<MyActivityPage>
   }
 }
 
-// 게시물 카드 위젯
 class PostCard extends StatelessWidget {
   final Post post;
+  final int proposersCount;
   final bool isFavorite;
   final VoidCallback onFavoriteToggle;
 
   const PostCard({
     Key? key,
     required this.post,
+    required this.proposersCount,
     required this.isFavorite,
     required this.onFavoriteToggle,
   }) : super(key: key);
@@ -197,7 +215,7 @@ class PostCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(post.content),
-            Text('참여인원 ${post.recruit}/6'),
+            Text('참여인원 $proposersCount/${post.recruit}'),
           ],
         ),
         trailing: IconButton(
