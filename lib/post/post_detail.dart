@@ -1,4 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
@@ -55,7 +56,8 @@ class _PostDetailState extends State<PostDetail> {
                   icon: Icon(Icons.arrow_back),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
-                actions: [
+                actions: [ //작성자이면 버튼이 나오게. 아니면 숨김.
+                  widget.post.id == FirebaseAuth.instance.currentUser?.uid ?
                   IconButton(
                     icon: Icon(Icons.more_vert),
                     onPressed: () {
@@ -102,7 +104,7 @@ class _PostDetailState extends State<PostDetail> {
                         },
                       );
                     },
-                  ),
+                  ) : Container(),
                 ],
                 expandedHeight: _size.width,
                 pinned: true,
