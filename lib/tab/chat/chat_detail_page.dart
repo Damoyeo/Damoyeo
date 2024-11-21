@@ -68,6 +68,13 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
 
       final customMessageId = "${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}";
 
+      // _controller.text 값을 임시 변수에 저장
+      final String messageText = _controller.text;
+
+      // 입력 필드를 즉시 초기화
+      _controller.clear();
+
+      // Firestore에 메시지 저장
       await _firestore
           .collection('chats')
           .doc(widget.chatId)
@@ -77,17 +84,16 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
         'messageId': customMessageId,
         'senderId': currentUser.uid,
         'senderName': currentUser.displayName ?? 'Unknown',
-        'message': _controller.text,
+        'message': messageText, // 임시 변수에 저장한 메시지 사용
         'timestamp': FieldValue.serverTimestamp(),
         'isRead': false,
       });
 
+      // 마지막 메시지 업데이트
       await _firestore.collection('chats').doc(widget.chatId).update({
-        'lastMessage': _controller.text,
+        'lastMessage': messageText, // 임시 변수에 저장한 메시지 사용
         'timestamp': FieldValue.serverTimestamp(),
       });
-
-      _controller.clear();
     }
   }
 
