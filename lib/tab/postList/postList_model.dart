@@ -6,7 +6,7 @@ class PostListModel{
   final Stream<QuerySnapshot> postsStream =
       FirebaseFirestore.instance.collection('posts')
           .withConverter<Post>(
-          fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),
+          fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!, snapshot.id),
           toFirestore: (post, _) => post.toJson(),
       )
           .snapshots();

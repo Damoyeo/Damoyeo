@@ -32,10 +32,11 @@ class CreateModel {
 
     final postRef =
         FirebaseFirestore.instance.collection('posts').withConverter<Post>(
-              fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),
+              fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!, snapshot.id),
               toFirestore: (post, _) => post.toJson(),
             );
     postRef.add(Post(
+        documentId: '',
         id: FirebaseAuth.instance.currentUser?.uid ?? '',
         title: title,
         content: content,

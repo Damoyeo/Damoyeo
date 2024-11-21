@@ -255,7 +255,7 @@ class _PostListPageState extends State<PostListPage> {
       .collection('posts') // 'posts' 컬렉션을 선택
       .withConverter<Post>(
         // Firestore 데이터를 Post 객체로 변환
-        fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),
+        fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!, snapshot.id),
         // Firestore의 JSON 데이터를 Post 객체로 변환
         toFirestore: (post, _) =>
             post.toJson(), // Post 객체를 Firestore에 JSON 형식으로 변환하여 저장
@@ -372,7 +372,7 @@ class _PostListPageState extends State<PostListPage> {
                   // ),
                   trailing: FutureBuilder<bool>(
                     future: userId != null
-                        ? _isLiked(post.id, userId!)
+                        ? _isLiked(post.documentId, userId!)
                         : Future.value(false),
                     builder: (context, snapshot) {
                       bool isLiked = snapshot.data ?? false;
@@ -384,7 +384,7 @@ class _PostListPageState extends State<PostListPage> {
                         onPressed: () {
                           if (userId != null) {
                             _toggleFavorite(
-                                post.id, userId!); // userId가 null이 아닐 때만 호출
+                                post.documentId, userId!); // userId가 null이 아닐 때만 호출
                           } else {
                             print("User not logged in");
                           }
