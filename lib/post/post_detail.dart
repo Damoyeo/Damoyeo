@@ -7,6 +7,10 @@ import 'package:intl/intl.dart';
 import 'package:smooth_page_indicator/smooth_page_indicator.dart';
 import '../tab/chat/chat_page.dart';
 import '../models/post.dart';
+import '../tab/postList/postList_page.dart';
+import '../main.dart';
+import '../tab/tab_page.dart';
+
 
 class PostDetail extends StatefulWidget {
   final Post post; // 전달받은 post 객체를 저장할 변수
@@ -231,8 +235,12 @@ class _PostDetailState extends State<PostDetail> {
                                                 SnackBar(content: Text('게시물이 삭제되었습니다.')),
                                               );
 
-                                              // 이전 화면으로 돌아가기
-                                              Navigator.pop(context, true);
+                                              // TabPage로 이동
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(builder: (context) => const TabPage()), // TabPage로 이동
+                                                    (Route<dynamic> route) => false, // 모든 이전 화면 제거
+                                              );
                                             } catch (e) {
                                               // 에러 처리
                                               ScaffoldMessenger.of(context).showSnackBar(
