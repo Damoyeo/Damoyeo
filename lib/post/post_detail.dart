@@ -33,7 +33,7 @@ class _PostDetailState extends State<PostDetail> {
     _pageController.dispose(); // 컨트롤러 해제
     super.dispose();
   }
-  
+
   // Future<void> _fetchProposersCount() async {  //신청 인원 구하는 함수
   //   try {
   //     final CollectionReference proposersRef = FirebaseFirestore.instance
@@ -163,44 +163,88 @@ class _PostDetailState extends State<PostDetail> {
                   onPressed: () => Navigator.of(context).pop(),
                 ),
                 actions: [
-                  //작성자이면 버튼이 나오게. 아니면 숨김.
-                  widget.post.id == FirebaseAuth.instance.currentUser?.uid
-                      ? IconButton(
+                  FutureBuilder<User?>(
+                    future: FirebaseAuth.instance.authStateChanges().first, // 인증 상태 가져오기
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        // 대기 상태일 경우 로딩 UI 반환
+                        return SizedBox();
+                      }
+
+                      if (snapshot.hasData && widget.post.id == snapshot.data?.uid) {
+                        // 현재 사용자가 작성자일 경우
+                        return IconButton(
                           icon: Icon(Icons.more_vert),
                           onPressed: () {
                             showModalBottomSheet(
                               context: context,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(16)),
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                               ),
                               builder: (BuildContext context) {
                                 return Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
                                       ListTile(
-                                        title: Text('수정',
-                                            style: TextStyle(fontSize: 18)),
+                                        title: Text('수정', style: TextStyle(fontSize: 18)),
                                         onTap: () {
                                           // 수정 기능 구현
                                           Navigator.pop(context);
                                         },
                                       ),
                                       ListTile(
-                                        title: Text('삭제',
-                                            style: TextStyle(fontSize: 18)),
-                                        onTap: () {
-                                          // 삭제 기능 구현
-                                          Navigator.pop(context);
+                                        title: Text('삭제', style: TextStyle(fontSize: 18)),
+                                        onTap: () async {
+                                          final shouldDelete = await showDialog<bool>(
+                                            context: context,
+                                            builder: (context) {
+                                              return AlertDialog(
+                                                title: Text('삭제 확인'),
+                                                content: Text('이 게시물을 삭제하시겠습니까?'),
+                                                actions: [
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(context, false), // 취소
+                                                    child: Text('취소'),
+                                                  ),
+                                                  TextButton(
+                                                    onPressed: () => Navigator.pop(context, true), // 확인
+                                                    child: Text('삭제'),
+                                                  ),
+                                                ],
+                                              );
+                                            },
+                                          );
+
+                                          if (shouldDelete == true) {
+                                            try {
+                                              // Firestore 문서 삭제
+                                              await FirebaseFirestore.instance
+                                                  .collection('posts')
+                                                  .doc(widget.post.documentId) // Firestore 문서 ID
+                                                  .delete();
+
+                                              // 삭제 성공 메시지
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('게시물이 삭제되었습니다.')),
+                                              );
+
+                                              // 이전 화면으로 돌아가기
+                                              Navigator.pop(context, true);
+                                            } catch (e) {
+                                              // 에러 처리
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('게시물 삭제 중 오류가 발생했습니다: $e')),
+                                              );
+                                            }
+                                          }
                                         },
                                       ),
+
                                       ListTile(
-                                        title: Text('참여인원 확인',
-                                            style: TextStyle(fontSize: 18)),
+                                        title: Text('참여인원 확인', style: TextStyle(fontSize: 18)),
                                         onTap: () {
                                           // 참여인원 확인 기능 구현
                                           Navigator.pop(context);
@@ -212,9 +256,15 @@ class _PostDetailState extends State<PostDetail> {
                               },
                             );
                           },
-                        )
-                      : Container(),
+                        );
+                      }
+
+                      // 작성자가 아닐 경우 아무것도 반환하지 않음
+                      return SizedBox();
+                    },
+                  ),
                 ],
+
                 expandedHeight: _size.width,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
