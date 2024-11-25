@@ -28,7 +28,7 @@ class _MyActivityPageState extends State<MyActivityPage>
         .where('user_id', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
-      return snapshot.docs.map((doc) => Post.fromJson(doc.data())).toList();
+      return snapshot.docs.map((doc) => Post.fromJson(doc.data(), doc.id)).toList();
     });
   }
 
@@ -42,7 +42,7 @@ class _MyActivityPageState extends State<MyActivityPage>
         final proposerDoc =
         await doc.reference.collection('proposers').doc(userId).get();
         if (proposerDoc.exists) {
-          participatedPosts.add(Post.fromJson(doc.data()));
+          participatedPosts.add(Post.fromJson(doc.data(), doc.id));
         }
       }
       return participatedPosts;

@@ -20,7 +20,7 @@ class _PostListPageState extends State<PostListPage> {
   Stream<QuerySnapshot<Post>> getPostsStream() {
     Query<Post> query =
         FirebaseFirestore.instance.collection('posts').withConverter<Post>(
-              fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),
+              fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!, snapshot.id),
               toFirestore: (post, _) => post.toJson(),
             );
 

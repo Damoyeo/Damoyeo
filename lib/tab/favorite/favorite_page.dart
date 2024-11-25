@@ -28,7 +28,7 @@ class _FavoritePageState extends State<FavoritePage> {
         // 각 게시물의 favorite 하위 컬렉션에 userId 문서가 있는지 확인
         final favoriteDoc = await postDoc.reference.collection('favorite').doc(userId).get();
         if (favoriteDoc.exists) {
-          favoritePosts.add(Post.fromJson(postDoc.data()));
+          favoritePosts.add(Post.fromJson(postDoc.data(), postDoc.id));
         }
       }
 
