@@ -10,6 +10,7 @@ import '../models/post.dart';
 import '../tab/postList/postList_page.dart';
 import '../main.dart';
 import '../tab/tab_page.dart';
+import '../tab/account/account_page.dart';
 
 
 class PostDetail extends StatefulWidget {
@@ -339,18 +340,38 @@ class _PostDetailState extends State<PostDetail> {
                           children: [
                             Row(
                               children: [
-                                CircleAvatar(
-                                  radius: 24, // 프로필 이미지 크기 설정
-                                  backgroundImage: NetworkImage(
-                                    'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg', // 여기에 실제 프로필 이미지 URL을 입력하세요
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AccountPage(userId: widget.post.id), // AccountPage로 이동
+                                      ),
+                                    );
+                                  },
+                                  child: const CircleAvatar(
+                                    radius: 24, // 프로필 이미지 크기 설정
+                                    backgroundImage: NetworkImage(
+                                      'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg', // 여기에 실제 프로필 이미지 URL을 입력하세요
+                                    ),
                                   ),
                                 ),
                                 SizedBox(width: 12), // 프로필 이미지와 닉네임 사이의 간격
-                                Text(
-                                  '닉네임',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
+                                GestureDetector(
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => AccountPage(userId: widget.post.id), // AccountPage로 이동
+                                      ),
+                                    );
+                                  },
+                                  child: const Text(
+                                    '닉네임',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ),
                               ],
