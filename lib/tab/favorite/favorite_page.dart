@@ -216,7 +216,7 @@ class _FavoritePageState extends State<FavoritePage> {
                           : post.content),
                       Text('지역: ${post.tag}'),
                       FutureBuilder<int>(
-                        future: _getProposersCount(post.id),
+                        future: _getProposersCount(post.documentId),
                         builder: (context, snapshot) {
                           final proposersCount = snapshot.data ?? 0;
                           return Text('참여인원 $proposersCount/${post.recruit}');
@@ -225,7 +225,7 @@ class _FavoritePageState extends State<FavoritePage> {
                     ],
                   ),
                   trailing: FutureBuilder<bool>(
-                    future: userId != null ? _isLiked(post.id, userId!) : Future.value(false),
+                    future: userId != null ? _isLiked(post.documentId, userId!) : Future.value(false),
                     builder: (context, snapshot) {
                       bool isLiked = snapshot.data ?? false;
                       return IconButton(
@@ -235,7 +235,7 @@ class _FavoritePageState extends State<FavoritePage> {
                         ),
                         onPressed: () {
                           if (userId != null) {
-                            _toggleFavorite(post.id, userId!);
+                            _toggleFavorite(post.documentId, userId!);
                           } else {
                             print("User not logged in");
                           }

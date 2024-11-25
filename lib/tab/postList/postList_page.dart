@@ -192,7 +192,7 @@ class _PostListPageState extends State<PostListPage> {
                   ),
                   trailing: FutureBuilder<bool>(
                     future: userId != null
-                        ? _isLiked(post.id, userId!)
+                        ? _isLiked(post.documentId, userId!)
                         : Future.value(false),
                     builder: (context, snapshot) {
                       bool isLiked = snapshot.data ?? false;
@@ -203,7 +203,7 @@ class _PostListPageState extends State<PostListPage> {
                         ),
                         onPressed: () {
                           if (userId != null) {
-                            _toggleFavorite(post.id, userId!);
+                            _toggleFavorite(post.documentId, userId!);
                           } else {
                             print("User not logged in");
                           }
