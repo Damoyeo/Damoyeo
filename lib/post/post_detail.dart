@@ -23,6 +23,36 @@ class PostDetail extends StatefulWidget {
 }
 
 class _PostDetailState extends State<PostDetail> {
+  //각 프로필 이미지 작성자의 닉네임 추가
+  //이종범 코드 추가부분
+  String? profileImageUrl; // 작성자의 프로필 이미지 URL
+  String? nickname; // 작성자의 닉네임
+
+  @override
+  void initState() {
+    super.initState();
+    fetchPostAuthorData(); // 작성자 데이터 가져오기
+  }
+
+  // Firebase에서 작성자의 데이터 가져오기
+  Future<void> fetchPostAuthorData() async {
+    try {
+      final userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(widget.post.id) // post에 저장된 작성자 ID
+          .get();
+
+      if (userDoc.exists) {
+        setState(() {
+          profileImageUrl = userDoc.data()?['profile_image']; // 프로필 이미지 URL
+          nickname = userDoc.data()?['nickname']; // 닉네임
+        });
+      }
+    } catch (e) {
+      print('Error fetching user data: $e');
+    }
+  }
+
   // final List<String> _urls = const [
   //   'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
   //   'https://www.news1.kr/_next/image?url=https%3A%2F%2Fi3n.news1.kr%2Fsystem%2Fphotos%2F2024%2F8%2F20%2F6833973%2Fhigh.jpg&w=1920&q=75',
@@ -237,6 +267,7 @@ class _PostDetailState extends State<PostDetail> {
                                               );
 
                                               // TabPage로 이동
+                                              //Navigator.pushAndRemoveUntil(
                                               Navigator.pushAndRemoveUntil(
                                                 context,
                                                 MaterialPageRoute(builder: (context) => const TabPage()), // TabPage로 이동
@@ -349,11 +380,11 @@ class _PostDetailState extends State<PostDetail> {
                                       ),
                                     );
                                   },
-                                  child: const CircleAvatar(
+                                  child: CircleAvatar(
                                     radius: 24, // 프로필 이미지 크기 설정
-                                    backgroundImage: NetworkImage(
-                                      'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg', // 여기에 실제 프로필 이미지 URL을 입력하세요
-                                    ),
+                                    backgroundImage: profileImageUrl != null
+                                        ? NetworkImage(profileImageUrl!) // Firebase에서 가져온 프로필 이미지 URL
+                                        : AssetImage('assets/default_profile.png') as ImageProvider, // 기본 프로필 이미지
                                   ),
                                 ),
                                 SizedBox(width: 12), // 프로필 이미지와 닉네임 사이의 간격
@@ -366,8 +397,8 @@ class _PostDetailState extends State<PostDetail> {
                                       ),
                                     );
                                   },
-                                  child: const Text(
-                                    '닉네임',
+                                  child: Text(
+                                    nickname ?? '닉네임 없음', // Firebase에서 가져온 닉네임
                                     style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
