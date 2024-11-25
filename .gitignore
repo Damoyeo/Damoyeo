@@ -41,3 +41,13 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+windows/flutter/generated_plugins.cmake
+windows/flutter/generated_plugin_registrant.cc
+macos/Flutter/GeneratedPluginRegistrant.swift
+android/settings.gradle
+android/gradle/wrapper/gradle-wrapper.properties
+android/gradle/wrapper/gradle-wrapper.properties
+android/build.gradle
+android/settings.gradle
+/android/gradle/wrapper
+/android/gradle/wrapper
