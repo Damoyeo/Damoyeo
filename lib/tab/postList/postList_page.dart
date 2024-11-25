@@ -12,19 +12,16 @@ class PostListPage extends StatefulWidget {
   _PostListPageState createState() => _PostListPageState();
 }
 
-// 게시물 리스트 페이지
 class _PostListPageState extends State<PostListPage> {
   String _sortOption = '최신순'; // 기본 정렬 기준은 최신순
 
-  // Firestore에서 'posts' 컬렉션의 데이터를 스트림 형태로 가져오는 변수
   Stream<QuerySnapshot<Post>> getPostsStream() {
     Query<Post> query =
-        FirebaseFirestore.instance.collection('posts').withConverter<Post>(
-              fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!, snapshot.id),
-              toFirestore: (post, _) => post.toJson(),
-            );
+    FirebaseFirestore.instance.collection('posts').withConverter<Post>(
+      fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!, snapshot.id),
+      toFirestore: (post, _) => post.toJson(),
+    );
 
-    // 선택한 정렬 옵션에 따라 쿼리를 설정
     if (_sortOption == '최신순') {
       query = query.orderBy('createdAt', descending: true);
     } else if (_sortOption == '오래된순') {
@@ -38,7 +35,6 @@ class _PostListPageState extends State<PostListPage> {
     return query.snapshots();
   }
 
-  // 정렬 모달 시트를 표시하는 함수
   void _showSortOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -48,7 +44,6 @@ class _PostListPageState extends State<PostListPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 최신순과 오래된순 옵션
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -69,7 +64,6 @@ class _PostListPageState extends State<PostListPage> {
                   ),
                 ],
               ),
-              // 가나다순과 가나다 역순 옵션
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
@@ -101,40 +95,33 @@ class _PostListPageState extends State<PostListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor:Colors.white, //배경색 고정
+        backgroundColor: Colors.white,
         centerTitle: true,
         title: Row(
           children: [
-            SizedBox(width: 8.0), // 좌측 여백
-            // Sort 버튼
+            SizedBox(width: 8.0),
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.blue),
-                borderRadius: BorderRadius.circular(20), // 둥근 모서리 테두리
+                borderRadius: BorderRadius.circular(20),
               ),
               child: TextButton.icon(
                 onPressed: () => _showSortOptions(context),
-                // Sort 모달 창 표시
                 icon: Icon(Icons.unfold_more, color: Colors.blue),
-                // 위아래 화살표 아이콘
-                label: Text(
-                  'Sort',
-                  style: TextStyle(color: Colors.blue),
-                ),
+                label: Text('Sort', style: TextStyle(color: Colors.blue)),
               ),
             ),
             Spacer(),
             Text(
               '모집 게시물',
               style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
             Spacer(),
-            // Filter 버튼
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.blue),
-                borderRadius: BorderRadius.circular(20), // 둥근 모서리 테두리
+                borderRadius: BorderRadius.circular(20),
               ),
               child: TextButton.icon(
                 onPressed: () => _showFilterOptions(context),
@@ -142,12 +129,12 @@ class _PostListPageState extends State<PostListPage> {
                 label: Text('Filter', style: TextStyle(color: Colors.blue)),
               ),
             ),
-            SizedBox(width: 8.0), // 우측 여백
+            SizedBox(width: 8.0),
           ],
         ),
       ),
       body: StreamBuilder<QuerySnapshot<Post>>(
-        stream: getPostsStream(), // 선택한 정렬 기준에 따라 데이터 스트림 설정
+        stream: getPostsStream(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Firestore 연결 오류 발생'));
@@ -167,16 +154,20 @@ class _PostListPageState extends State<PostListPage> {
               final userId = getCurrentUserId();
 
               return Card(
-
                 margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: ListTile(
                   leading: Container(
                     width: 50.0,
                     height: 50.0,
                     color: Colors.grey[300],
-                    child: post.imageUrl != null
-                        ? Image.network(post.imageUrl!, fit: BoxFit.cover)
-                        : Icon(Icons.image, color: Colors.white),
+                    child: post.imageUrls.isNotEmpty // imageUrl이 있는지 확인
+                        ? Image.network(
+                      // imageUrl이 있으면 해당 URL에서 이미지 불러오기
+                      post.imageUrls[0]!,
+                      fit: BoxFit.cover, // 이미지가 컨테이너에 맞도록 설정
+                    )
+                        : Icon(Icons.image,
+                        color: Colors.white), // imageUrl이 없으면 기본 아이콘 표시
                   ),
                   title: Text(post.title),
                   subtitle: Column(
@@ -185,9 +176,15 @@ class _PostListPageState extends State<PostListPage> {
                       Text(post.content.length > 15
                           ? '${post.content.substring(0, 15)}...'
                           : post.content),
-                      // 15글자까지만 표시하고 나머지는 생략
                       Text('지역: ${post.tag}'),
-                      Text('모집인원 ${post.recruit}'),
+                      FutureBuilder<int>(
+                        future: _getProposersCount(post.documentId),
+                        builder: (context, snapshot) {
+                          final proposersCount = snapshot.data ?? 0;
+                          return Text(
+                              '참여인원: $proposersCount/${post.recruit}');
+                        },
+                      ),
                     ],
                   ),
                   trailing: FutureBuilder<bool>(
@@ -225,7 +222,6 @@ class _PostListPageState extends State<PostListPage> {
           );
         },
       ),
-      //글쓰기 플로팅버튼
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -238,7 +234,6 @@ class _PostListPageState extends State<PostListPage> {
     );
   }
 
-  // 사용자 ID 가져오기
   String? getCurrentUserId() {
     final user = FirebaseAuth.instance.currentUser;
     return user?.uid;
@@ -273,7 +268,15 @@ class _PostListPageState extends State<PostListPage> {
     setState(() {});
   }
 
-  // 필터 모달 시트를 표시하는 함수
+  Future<int> _getProposersCount(String postId) async {
+    final collection = FirebaseFirestore.instance
+        .collection('posts')
+        .doc(postId)
+        .collection('proposers');
+    final querySnapshot = await collection.get();
+    return querySnapshot.size;
+  }
+
   void _showFilterOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,

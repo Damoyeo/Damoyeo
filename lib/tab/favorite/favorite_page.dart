@@ -216,12 +216,13 @@ class _FavoritePageState extends State<FavoritePage> {
                           : post.content),
                       Text('지역: ${post.tag}'),
                       FutureBuilder<int>(
-                        future: _getProposersCount(post.documentId),
+                        future: _getProposersCount(post.documentId), // post ID 사용
                         builder: (context, snapshot) {
                           final proposersCount = snapshot.data ?? 0;
                           return Text('참여인원 $proposersCount/${post.recruit}');
                         },
                       ),
+
                     ],
                   ),
                   trailing: FutureBuilder<bool>(

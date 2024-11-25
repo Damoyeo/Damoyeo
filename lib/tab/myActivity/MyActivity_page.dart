@@ -128,18 +128,18 @@ class _MyActivityPageState extends State<MyActivityPage>
                 itemBuilder: (context, index) {
                   final post = posts[index];
                   return FutureBuilder<int>(
-                    future: _getProposersCount(post.id),
+                    future: _getProposersCount(post.documentId),
                     builder: (context, snapshot) {
                       final proposersCount = snapshot.data ?? 0;
                       return FutureBuilder<bool>(
-                        future: _isLiked(post.id),
+                        future: _isLiked(post.documentId),
                         builder: (context, isLikedSnapshot) {
                           final isFavorite = isLikedSnapshot.data ?? false;
                           return PostCard(
                             post: post,
                             proposersCount: proposersCount,
                             isFavorite: isFavorite,
-                            onFavoriteToggle: () => _toggleFavorite(post.id),
+                            onFavoriteToggle: () => _toggleFavorite(post.documentId),
                           );
                         },
                       );
@@ -168,18 +168,18 @@ class _MyActivityPageState extends State<MyActivityPage>
                 itemBuilder: (context, index) {
                   final post = posts[index];
                   return FutureBuilder<int>(
-                    future: _getProposersCount(post.id),
+                    future: _getProposersCount(post.documentId),
                     builder: (context, snapshot) {
                       final proposersCount = snapshot.data ?? 0;
                       return FutureBuilder<bool>(
-                        future: _isLiked(post.id),
+                        future: _isLiked(post.documentId),
                         builder: (context, isLikedSnapshot) {
                           final isFavorite = isLikedSnapshot.data ?? false;
                           return PostCard(
                             post: post,
                             proposersCount: proposersCount,
                             isFavorite: isFavorite,
-                            onFavoriteToggle: () => _toggleFavorite(post.id),
+                            onFavoriteToggle: () => _toggleFavorite(post.documentId),
                           );
                         },
                       );
@@ -226,7 +226,10 @@ class PostCard extends StatelessWidget {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(post.content),
+            Text(post.content.length > 15
+                ? '${post.content.substring(0, 15)}...'
+                : post.content),
+            Text('지역: ${post.tag}'),
             Text('참여인원 $proposersCount/${post.recruit}'),
           ],
         ),
