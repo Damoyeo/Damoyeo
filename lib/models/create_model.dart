@@ -66,4 +66,39 @@ class CreateModel {
     String downloadUrl = await storageRef.getDownloadURL();
     return downloadUrl;
   }
+
+  Future<void> updatePost(
+      String documentId,
+      String title,
+      String content,
+      String local,
+      int recruit,
+      // List<File> imageFiles,
+      String address,
+      String detailAddress,
+      String category,
+      int cost,
+      DateTime meetingTime,
+      ) async {
+    // List<String> imageUrls = [];
+    //
+    // // 모든 이미지 파일을 업로드하고 URL을 리스트에 추가
+    // for (File file in imageFiles) {
+    //   String url = await uploadImage(file);
+    //   imageUrls.add(url);
+    // }
+    await FirebaseFirestore.instance.collection('posts').doc(documentId).update({
+      'title': title,
+      'content': content,
+      'local': local,
+      'recruit': recruit,
+      // 'imageUrls': imageUrls,
+      'address': address,
+      'detailAddress': detailAddress,
+      'category': category,
+      'cost': cost,
+      'meetingTime': meetingTime,
+      'createdAt': Timestamp.now(),
+    });
+  }
 }

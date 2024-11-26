@@ -11,7 +11,7 @@ import '../tab/postList/postList_page.dart';
 import '../main.dart';
 import '../tab/tab_page.dart';
 import '../tab/account/account_page.dart';
-
+import 'create_post.dart';
 
 class PostDetail extends StatefulWidget {
   final Post post; // 전달받은 post 객체를 저장할 변수
@@ -27,11 +27,15 @@ class _PostDetailState extends State<PostDetail> {
   //이종범 코드 추가부분
   String? profileImageUrl; // 작성자의 프로필 이미지 URL
   String? nickname; // 작성자의 닉네임
+  int _favoriteCount = 0;
+  int _proposersCount = 0;
 
   @override
   void initState() {
     super.initState();
     fetchPostAuthorData(); // 작성자 데이터 가져오기
+    fetchFavoriteCount(); // Firestore에서 데이터 가져오기
+    fetchProposersCount(); // Firestore에서 데이터 가져오기
   }
 
   // Firebase에서 작성자의 데이터 가져오기
@@ -51,6 +55,20 @@ class _PostDetailState extends State<PostDetail> {
     } catch (e) {
       print('Error fetching user data: $e');
     }
+  }
+
+  Future<void> fetchFavoriteCount() async {
+    final count = await getFavoriteCount(widget.post.documentId);
+    setState(() {
+      _favoriteCount = count; // 상태 업데이트
+    });
+  }
+
+  Future<void> fetchProposersCount() async {
+    final count = await getProposersCount(widget.post.documentId);
+    setState(() {
+      _proposersCount = count; // 상태 업데이트
+    });
   }
 
   // final List<String> _urls = const [
@@ -134,7 +152,7 @@ class _PostDetailState extends State<PostDetail> {
         'createdAt': Timestamp.now(),
       });
     }
-
+    fetchFavoriteCount();
     setState(() {}); // 좋아요 상태 업데이트
   }
 
@@ -152,7 +170,7 @@ class _PostDetailState extends State<PostDetail> {
     return docSnapshot.exists;
   }
 
-  // 좋아요 추가/취소 기능
+  // 신청/취소 기능
   Future<void> _toggleProposers(String postId, String userId) async {
     final proposersRef = FirebaseFirestore.instance
         .collection('posts')
@@ -163,20 +181,81 @@ class _PostDetailState extends State<PostDetail> {
     final isProposers = await _isProposers(postId, userId);
 
     if (isProposers) {
-      // 좋아요 취소
+      // 신청 취소
       await proposersRef.delete();
     } else {
-      // 좋아요 추가
-      await proposersRef.set({
-        'user_id': userId,
-        'createdAt': Timestamp.now(),
-      });
+      // 신청
+      await fetchProposersCount();
+      if (widget.post.recruit > _proposersCount) {
+        await proposersRef.set({
+          'user_id': userId,
+          'createdAt': Timestamp.now(),
+        });
+      } else {
+        //alert 구현 "모집인원이 모두 모집되었습니다."
+        _showRecruitmentFullAlert();
+      }
     }
+    fetchProposersCount();
+    setState(() {}); // 신청 상태 업데이트
+  }
 
-    setState(() {}); // 좋아요 상태 업데이트
+  // 모집 인원이 모두 찼을 때 Alert 표시 함수
+  void _showRecruitmentFullAlert() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("모집마감"),
+          content: Text("모집 인원이 모두 모집되었습니다."),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // 다이얼로그 닫기
+              },
+              child: Text("확인"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   //신청 기능구현 -------------------------------------------------------------
+
+  Future<int> getFavoriteCount(String postId) async {
+    try {
+      // Firestore에서 'favorite' 컬렉션의 모든 문서 가져오기
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .collection('favorite')
+          .get();
+
+      // 문서의 수 반환
+      return querySnapshot.size;
+    } catch (e) {
+      print('Error fetching favorite count: $e');
+      return 0; // 에러가 발생한 경우 0을 반환
+    }
+  }
+
+  Future<int> getProposersCount(String postId) async {
+    try {
+      // Firestore에서 'favorite' 컬렉션의 모든 문서 가져오기
+      final QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .collection('proposers')
+          .get();
+
+      // 문서의 수 반환
+      return querySnapshot.size;
+    } catch (e) {
+      print('Error fetching favorite count: $e');
+      return 0; // 에러가 발생한 경우 0을 반환
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -199,14 +278,17 @@ class _PostDetailState extends State<PostDetail> {
                 ),
                 actions: [
                   FutureBuilder<User?>(
-                    future: FirebaseAuth.instance.authStateChanges().first, // 인증 상태 가져오기
+                    future: FirebaseAuth.instance
+                        .authStateChanges()
+                        .first, // 인증 상태 가져오기
                     builder: (context, snapshot) {
                       if (snapshot.connectionState == ConnectionState.waiting) {
                         // 대기 상태일 경우 로딩 UI 반환
                         return SizedBox();
                       }
 
-                      if (snapshot.hasData && widget.post.id == snapshot.data?.uid) {
+                      if (snapshot.hasData &&
+                          widget.post.id == snapshot.data?.uid) {
                         // 현재 사용자가 작성자일 경우
                         return IconButton(
                           icon: Icon(Icons.more_vert),
@@ -214,38 +296,62 @@ class _PostDetailState extends State<PostDetail> {
                             showModalBottomSheet(
                               context: context,
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                                borderRadius: BorderRadius.vertical(
+                                    top: Radius.circular(16)),
                               ),
                               builder: (BuildContext context) {
                                 return Padding(
                                   padding: const EdgeInsets.all(16.0),
                                   child: Column(
                                     mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       ListTile(
-                                        title: Text('수정', style: TextStyle(fontSize: 18)),
-                                        onTap: () {
+                                        title: Text('수정',
+                                            style: TextStyle(fontSize: 18)),
+                                        onTap: () async {
                                           // 수정 기능 구현
-                                          Navigator.pop(context);
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) => CreatePost(
+                                                  post: widget.post), // Post 전달
+                                            ),
+                                          );
+                                          // 수정이 완료되었는지 확인
+                                          if (result == true) {
+                                            // 현재 페이지를 닫음
+                                            Navigator.pop(context);
+                                            Navigator.pop(context);
+                                          }
                                         },
                                       ),
                                       ListTile(
-                                        title: Text('삭제', style: TextStyle(fontSize: 18)),
+                                        title: Text('삭제',
+                                            style: TextStyle(fontSize: 18)),
                                         onTap: () async {
-                                          final shouldDelete = await showDialog<bool>(
+                                          final shouldDelete =
+                                              await showDialog<bool>(
                                             context: context,
                                             builder: (context) {
                                               return AlertDialog(
                                                 title: Text('삭제 확인'),
-                                                content: Text('이 게시물을 삭제하시겠습니까?'),
+                                                content:
+                                                    Text('이 게시물을 삭제하시겠습니까?'),
                                                 actions: [
                                                   TextButton(
-                                                    onPressed: () => Navigator.pop(context, false), // 취소
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, false),
+                                                    // 취소
                                                     child: Text('취소'),
                                                   ),
                                                   TextButton(
-                                                    onPressed: () => Navigator.pop(context, true), // 확인
+                                                    onPressed: () =>
+                                                        Navigator.pop(
+                                                            context, true),
+                                                    // 확인
                                                     child: Text('삭제'),
                                                   ),
                                                 ],
@@ -258,33 +364,44 @@ class _PostDetailState extends State<PostDetail> {
                                               // Firestore 문서 삭제
                                               await FirebaseFirestore.instance
                                                   .collection('posts')
-                                                  .doc(widget.post.documentId) // Firestore 문서 ID
+                                                  .doc(widget.post
+                                                      .documentId) // Firestore 문서 ID
                                                   .delete();
 
                                               // 삭제 성공 메시지
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('게시물이 삭제되었습니다.')),
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content:
+                                                        Text('게시물이 삭제되었습니다.')),
                                               );
 
                                               // TabPage로 이동
                                               //Navigator.pushAndRemoveUntil(
                                               Navigator.pushAndRemoveUntil(
                                                 context,
-                                                MaterialPageRoute(builder: (context) => const TabPage()), // TabPage로 이동
-                                                    (Route<dynamic> route) => false, // 모든 이전 화면 제거
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        const TabPage()),
+                                                // TabPage로 이동
+                                                (Route<dynamic> route) =>
+                                                    false, // 모든 이전 화면 제거
                                               );
                                             } catch (e) {
                                               // 에러 처리
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(content: Text('게시물 삭제 중 오류가 발생했습니다: $e')),
+                                              ScaffoldMessenger.of(context)
+                                                  .showSnackBar(
+                                                SnackBar(
+                                                    content: Text(
+                                                        '게시물 삭제 중 오류가 발생했습니다: $e')),
                                               );
                                             }
                                           }
                                         },
                                       ),
-
                                       ListTile(
-                                        title: Text('참여인원 확인', style: TextStyle(fontSize: 18)),
+                                        title: Text('참여인원 확인',
+                                            style: TextStyle(fontSize: 18)),
                                         onTap: () {
                                           // 참여인원 확인 기능 구현
                                           Navigator.pop(context);
@@ -304,7 +421,6 @@ class _PostDetailState extends State<PostDetail> {
                     },
                   ),
                 ],
-
                 expandedHeight: _size.width,
                 pinned: true,
                 flexibleSpace: FlexibleSpaceBar(
@@ -376,15 +492,20 @@ class _PostDetailState extends State<PostDetail> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => AccountPage(userId: widget.post.id), // AccountPage로 이동
+                                        builder: (context) => AccountPage(
+                                            userId: widget
+                                                .post.id), // AccountPage로 이동
                                       ),
                                     );
                                   },
                                   child: CircleAvatar(
                                     radius: 24, // 프로필 이미지 크기 설정
                                     backgroundImage: profileImageUrl != null
-                                        ? NetworkImage(profileImageUrl!) // Firebase에서 가져온 프로필 이미지 URL
-                                        : AssetImage('assets/default_profile.png') as ImageProvider, // 기본 프로필 이미지
+                                        ? NetworkImage(
+                                            profileImageUrl!) // Firebase에서 가져온 프로필 이미지 URL
+                                        : AssetImage(
+                                                'assets/default_profile.png')
+                                            as ImageProvider, // 기본 프로필 이미지
                                   ),
                                 ),
                                 SizedBox(width: 12), // 프로필 이미지와 닉네임 사이의 간격
@@ -393,7 +514,9 @@ class _PostDetailState extends State<PostDetail> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => AccountPage(userId: widget.post.id), // AccountPage로 이동
+                                        builder: (context) => AccountPage(
+                                            userId: widget
+                                                .post.id), // AccountPage로 이동
                                       ),
                                     );
                                   },
@@ -477,19 +600,18 @@ class _PostDetailState extends State<PostDetail> {
                         widget.post.documentId, currentUserId!), // 좋아요 상태 확인
                     builder: (context, snapshot) {
                       final isProposers = snapshot.data ?? false;
+                      final bool isRecruitAvailable = widget.post.recruit > _proposersCount;
 
                       return ElevatedButton(
-                        onPressed: isProposers
-                            ? null // 신청 상태라면 버튼 비활성화
-                            : () async {
-                                // 신청 상태가 아니라면 참여하기 버튼 클릭 처리
-                                await _toggleProposers(widget.post.documentId,
-                                    currentUserId!); // 신청 상태 변경
-                                print('참여하기 버튼 클릭');
-                              },
+                        onPressed: (!isProposers && !isRecruitAvailable) ? null : () async {
+                          // 신청 상태가 아니라면 참여하기 버튼 클릭 처리
+                          await _toggleProposers(widget.post.documentId,
+                              currentUserId!); // 신청 상태 변경
+                          print('참여하기 버튼 클릭');
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor:
-                              isProposers ? Colors.grey : Colors.blue,
+                              isProposers ? Colors.grey : isRecruitAvailable ? Colors.blue : Colors.grey,
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -497,8 +619,10 @@ class _PostDetailState extends State<PostDetail> {
                         ),
                         child: Text(
                           isProposers
-                              ? '신청 완료 1/${widget.post.recruit}' // 좋아요 상태일 때 표시
-                              : '참여하기 1/${widget.post.recruit}',
+                              ? '취소하기 ${_proposersCount}/${widget.post.recruit}' // 좋아요 상태일 때 표시
+                              : isRecruitAvailable
+                                  ? '참여하기 ${_proposersCount}/${widget.post.recruit}'
+                                  : '모집마감${_proposersCount}/${widget.post.recruit}',
                           // 좋아요 상태가 아닐 때 표시
                           style: TextStyle(fontSize: 16, color: Colors.white),
                         ),
@@ -507,29 +631,33 @@ class _PostDetailState extends State<PostDetail> {
                   ),
                 ),
                 SizedBox(width: 8),
-                IconButton(
-                  icon: FutureBuilder<bool>(
-                    future: _isLiked(widget.post.documentId, currentUserId!),
-                    // 좋아요 상태 확인
-                    builder: (context, snapshot) {
-                      final isFavorite = snapshot.data ?? false;
+                Column(
+                  mainAxisSize: MainAxisSize.min, // 자식 크기에 맞게 Column 크기 설정
+                  children: [
+                    GestureDetector(
+                      onTap: () async {
+                        if (currentUserId != null) {
+                          await _toggleFavorite(
+                              widget.post.documentId, currentUserId!);
+                        } else {
+                          print("User not logged in");
+                        }
+                      },
+                      child: FutureBuilder<bool>(
+                        future:
+                            _isLiked(widget.post.documentId, currentUserId!),
+                        builder: (context, snapshot) {
+                          final isFavorite = snapshot.data ?? false;
 
-                      return Icon(
-                        isFavorite ? Icons.favorite : Icons.favorite_border,
-                        color: isFavorite ? Color(0xFF006FFD) : Colors.grey,
-                      );
-                    },
-                  ),
-                  onPressed: () async {
-                    if (currentUserId != null) {
-                      // 좋아요 토글
-                      await _toggleFavorite(
-                          widget.post.documentId, currentUserId!); // 좋아요 상태 변경
-                    } // UI 갱신
-                    else {
-                      print("User not logged in");
-                    }
-                  },
+                          return Icon(
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color: isFavorite ? Color(0xFF006FFD) : Colors.grey,
+                          );
+                        },
+                      ),
+                    ),
+                    Text('${_favoriteCount}')
+                  ],
                 ),
               ],
             ),

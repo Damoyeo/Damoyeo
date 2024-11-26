@@ -5,12 +5,15 @@ import 'package:currency_text_input_formatter/currency_text_input_formatter.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gomoph/models//create_model.dart';
+import 'package:gomoph/models/post.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:kpostal/kpostal.dart';
 
 class CreatePost extends StatefulWidget {
-  const CreatePost({super.key});
+  final Post? post;
+
+  const CreatePost({super.key, this.post});
 
   @override
   State<CreatePost> createState() => _CreatePostState();
@@ -18,6 +21,44 @@ class CreatePost extends StatefulWidget {
 
 class _CreatePostState extends State<CreatePost> {
   final model = new CreateModel();
+
+  late TextEditingController _titleTextController;
+  late TextEditingController _addressTextController;
+  late TextEditingController _detailAddressTextController;
+  late TextEditingController _costTextController;
+  late TextEditingController _contentTextController;
+  late TextEditingController _recruitTextController;
+
+  @override
+  void initState() {
+    super.initState();
+
+    // 기존 게시물 데이터로 초기화 (수정 모드)
+    if (widget.post != null) {
+      final post = widget.post!;
+      _titleTextController = TextEditingController(text: post.title);
+      _addressTextController = TextEditingController(text: post.address);
+      _detailAddressTextController =
+          TextEditingController(text: post.detailAddress);
+      _costTextController = TextEditingController(text: post.cost.toString());
+      _contentTextController = TextEditingController(text: post.content);
+      _recruitTextController =
+          TextEditingController(text: post.recruit.toString());
+      _localSelectedValue = post.tag;
+      _selectedCategoryIndex = categories.indexOf(post.category);
+      _selectedDate = post.meetingTime;
+      // _images = post.imageUrls.map((url) => XFile(url)).toList();
+    } else {
+      // 작성 모드 초기화
+      _titleTextController = TextEditingController();
+      _addressTextController = TextEditingController();
+      _detailAddressTextController = TextEditingController();
+      _costTextController = TextEditingController();
+      _contentTextController = TextEditingController();
+      _recruitTextController = TextEditingController();
+    }
+  }
+
 
 ///////////////////////////////////////////////////////////////날짜 시간 입력받는 기능
   DateTime? _selectedDate;
@@ -75,7 +116,6 @@ class _CreatePostState extends State<CreatePost> {
   /////////////////////////////////////////////////////////////////
 
   ////////////////////////////////////////////////////////// firebase에 넣을 변수들, 컨트롤러들
-  final _titleTextController = TextEditingController(); //제목 컨트롤러
   int? _selectedCategoryIndex; // 선택된 카테고리의 인덱스
   List<String> categories = [
     '친목',
@@ -90,12 +130,13 @@ class _CreatePostState extends State<CreatePost> {
     '기타'
   ];
   String? _localSelectedValue; //지역 드롭다운버튼 값
-  final _addressTextController = TextEditingController(); //활동장소 컨트롤러
-  final _detailAddressTextController = TextEditingController(); //상세주소 컨트롤러
-  final _costTextController = TextEditingController(); //예상 활동금액 컨트롤러
   String? _limitSelectedValue; //불참 횟수 드롭다운버튼 값
-  final _contentTextController = TextEditingController(); //게시글 내용 컨트롤러
-  final _recruitTextController = TextEditingController(); //모집인원 컨트롤러
+  // final _titleTextController = TextEditingController(); //제목 컨트롤러
+  // final _addressTextController = TextEditingController(); //활동장소 컨트롤러
+  // final _detailAddressTextController = TextEditingController(); //상세주소 컨트롤러
+  // final _costTextController = TextEditingController(); //예상 활동금액 컨트롤러
+  // final _contentTextController = TextEditingController(); //게시글 내용 컨트롤러
+  // final _recruitTextController = TextEditingController(); //모집인원 컨트롤러
 
   @override
   void dispose() {
@@ -137,8 +178,8 @@ class _CreatePostState extends State<CreatePost> {
   }
 
   // 에러 border
-  OutlineInputBorder customInputBorder(
-      bool isValid, Color enabledColor, Color errorColor) {
+  OutlineInputBorder customInputBorder(bool isValid, Color enabledColor,
+      Color errorColor) {
     return OutlineInputBorder(
       borderSide: BorderSide(
         color: isValid ? enabledColor : errorColor,
@@ -219,7 +260,7 @@ class _CreatePostState extends State<CreatePost> {
   int saveToDatabase() {
     String formattedText = _costTextController.text; // ₩ 1,000 같은 값
     String cleanedText =
-        formattedText.replaceAll(RegExp(r'[^\d]'), ''); // 숫자만 남기기
+    formattedText.replaceAll(RegExp(r'[^\d]'), ''); // 숫자만 남기기
     int amount = int.parse(cleanedText); // 숫자형으로 변환
     return amount;
   }
@@ -294,7 +335,10 @@ class _CreatePostState extends State<CreatePost> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: _images.asMap().entries.map((entry) {
+                      children: _images
+                          .asMap()
+                          .entries
+                          .map((entry) {
                         int index = entry.key;
                         var image = entry.value;
                         return Stack(
@@ -350,9 +394,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '제목',
                 enabledBorder:
-                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                customInputBorder(_isTitleValid, Colors.grey, Colors.red),
                 focusedBorder:
-                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                customInputBorder(_isTitleValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -396,10 +440,11 @@ class _CreatePostState extends State<CreatePost> {
               ),
               hint: Text('지역을 선택해주세요.'),
               items: ['서울특별시', '부산광역시', '대구광역시']
-                  .map((String value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(value),
-                      ))
+                  .map((String value) =>
+                  DropdownMenuItem(
+                    value: value,
+                    child: Text(value),
+                  ))
                   .toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -441,17 +486,18 @@ class _CreatePostState extends State<CreatePost> {
                   onPressed: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) => KpostalView(
-                          // useLocalServer: true,
-                          // localPort: 1024,
-                          // kakaoKey: '{Add your KAKAO DEVELOPERS JS KEY}',
-                          callback: (Kpostal result) {
-                            setState(() {
-                              // 우편번호 코드 postCode = result.postCode;
-                              _addressTextController.text = result.address;
-                            });
-                          },
-                        ),
+                        builder: (_) =>
+                            KpostalView(
+                              // useLocalServer: true,
+                              // localPort: 1024,
+                              // kakaoKey: '{Add your KAKAO DEVELOPERS JS KEY}',
+                              callback: (Kpostal result) {
+                                setState(() {
+                                  // 우편번호 코드 postCode = result.postCode;
+                                  _addressTextController.text = result.address;
+                                });
+                              },
+                            ),
                       ),
                     );
                   },
@@ -520,9 +566,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '모집 인원을 입력해주세요.',
                 enabledBorder:
-                    customInputBorder(_isRecruitValid, Colors.grey, Colors.red),
+                customInputBorder(_isRecruitValid, Colors.grey, Colors.red),
                 focusedBorder:
-                    customInputBorder(_isRecruitValid, Colors.blue, Colors.red),
+                customInputBorder(_isRecruitValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -548,9 +594,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '₩ 활동금액을 입력해주세요.',
                 enabledBorder:
-                    customInputBorder(_isCostValid, Colors.grey, Colors.red),
+                customInputBorder(_isCostValid, Colors.grey, Colors.red),
                 focusedBorder:
-                    customInputBorder(_isCostValid, Colors.blue, Colors.red),
+                customInputBorder(_isCostValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -568,18 +614,19 @@ class _CreatePostState extends State<CreatePost> {
               value: _limitSelectedValue,
               decoration: InputDecoration(
                 enabledBorder:
-                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                customInputBorder(_isTitleValid, Colors.grey, Colors.red),
                 focusedBorder:
-                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                customInputBorder(_isTitleValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               hint: Text('불참 횟수를 선택해주세요.'),
               items: ['1회', '2회', '3회', '무제한']
-                  .map((String value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(value),
-                      ))
+                  .map((String value) =>
+                  DropdownMenuItem(
+                    value: value,
+                    child: Text(value),
+                  ))
                   .toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -596,9 +643,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '모집글 내용을 작성해주세요.',
                 enabledBorder:
-                    customInputBorder(_isContentValid, Colors.grey, Colors.red),
+                customInputBorder(_isContentValid, Colors.grey, Colors.red),
                 focusedBorder:
-                    customInputBorder(_isContentValid, Colors.blue, Colors.red),
+                customInputBorder(_isContentValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -638,25 +685,43 @@ class _CreatePostState extends State<CreatePost> {
 
                       try {
                         // 업로드 처리
-                        await model.uploadPost(
-                          _titleTextController.text,
-                          _contentTextController.text,
-                          _localSelectedValue!,
-                          int.parse(_recruitTextController.text),
-                          DateTime.now(),
-                          'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
-                          convertXFilesToFiles(_images),
-                          _addressTextController.text,
-                          _detailAddressTextController.text,
-                          categories[_selectedCategoryIndex!],
-                          saveToDatabase(),
-                          _selectedDate!,
-                        );
+                        if (widget.post == null) {
+                          await model.uploadPost(
+                            _titleTextController.text,
+                            _contentTextController.text,
+                            _localSelectedValue!,
+                            int.parse(_recruitTextController.text),
+                            DateTime.now(),
+                            'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
+                            convertXFilesToFiles(_images),
+                            _addressTextController.text,
+                            _detailAddressTextController.text,
+                            categories[_selectedCategoryIndex!],
+                            saveToDatabase(),
+                            _selectedDate!,
+                          );
+                        } else {
+                          if(widget.post != null) {
+                            await model.updatePost(
+                                widget.post!.documentId,
+                                _titleTextController.text,
+                                _contentTextController.text,
+                                _localSelectedValue!,
+                                int.parse(_recruitTextController.text),
+                                // convertXFilesToFiles(_images),
+                                _addressTextController.text,
+                                _detailAddressTextController.text,
+                                categories[_selectedCategoryIndex!],
+                                saveToDatabase(),
+                                _selectedDate!);
+                          }
+                        }
+
 
                         // 업로드가 완료되면 다이얼로그 닫고 화면 이동
                         if (mounted) {
                           Navigator.pop(context); // 로딩 스피너 닫기
-                          Navigator.pop(context); // 이전 화면으로 돌아가기
+                          Navigator.pop(context, true); // 이전 화면으로 돌아가기
                         }
                       } catch (e) {
                         Navigator.pop(context); // 로딩 스피너 닫기
