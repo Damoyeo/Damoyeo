@@ -257,6 +257,107 @@ class _PostDetailState extends State<PostDetail> {
     }
   }
 
+  //proposer컬렉션에서 신청자 목록의 아이디와 프로필 이미지, 닉네임을 불러옴
+  Future<List<Map<String, String>>> fetchProposersData(String postId) async {
+    try {
+      final proposersRef = FirebaseFirestore.instance
+          .collection('posts')
+          .doc(postId)
+          .collection('proposers');
+      final snapshot = await proposersRef.get();
+
+      List<Map<String, String>> proposersData = [];
+      for (var doc in snapshot.docs) {
+        final userId = doc['user_id']; // 프로필의 user_id 가져오기
+        final userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(userId)
+            .get();
+
+        if (userDoc.exists) {
+          proposersData.add({
+            'user_id': userId, // user_id 추가
+            'profileImage': userDoc.data()?['profile_image'] ?? '',
+            'nickname': userDoc.data()?['nickname'] ?? '닉네임 없음',
+          });
+        }
+      }
+      return proposersData;
+    } catch (e) {
+      print('Error fetching proposers data: $e');
+      return [];
+    }
+  }
+
+/////////////////////////////////////////////////////////////////////모달
+  void _showProposersModal(BuildContext context) async {
+    final List<Map<String, String>> proposersData =
+        await fetchProposersData(widget.post.documentId);
+
+    showModalBottomSheet(
+      context: context,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: EdgeInsets.all(16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                '참여 인원 목록',
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 16),
+              if (proposersData.isEmpty)
+                Center(
+                  child: Text('참여 인원이 없습니다.'),
+                )
+              else
+                Expanded(
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: proposersData.length,
+                    itemBuilder: (context, index) {
+                      final proposer = proposersData[index];
+                      final profileImage = proposer['profileImage']!;
+                      final nickname = proposer['nickname']!;
+                      final userId = proposer['user_id']!;
+
+                      return ListTile(
+                        leading: CircleAvatar(
+                          radius: 24,
+                          backgroundImage: profileImage.isNotEmpty
+                              ? NetworkImage(profileImage)
+                              : AssetImage('assets/default_profile.png')
+                                  as ImageProvider,
+                        ),
+                        title: Text(
+                          nickname,
+                          style: TextStyle(
+                              fontSize: 16, fontWeight: FontWeight.w500),
+                        ),
+                        trailing: IconButton(
+                          icon: Icon(Icons.send, color: Colors.blue),
+                          onPressed: () {
+                            // 버튼 클릭 시 user_id 사용하여 메시지 창
+                            print('Send message to user ID: $userId');
+                          },
+                        ),
+                      );
+                    },
+                  ),
+                )
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  //////////////////////////////////////////////////////////////////모달
+
   @override
   Widget build(BuildContext context) {
     final List<String> _urls = widget.post.imageUrls;
@@ -405,6 +506,8 @@ class _PostDetailState extends State<PostDetail> {
                                         onTap: () {
                                           // 참여인원 확인 기능 구현
                                           Navigator.pop(context);
+                                          _showProposersModal(
+                                              context); // 참여인원 확인 모달 열기
                                         },
                                       ),
                                     ],
@@ -600,18 +703,24 @@ class _PostDetailState extends State<PostDetail> {
                         widget.post.documentId, currentUserId!), // 좋아요 상태 확인
                     builder: (context, snapshot) {
                       final isProposers = snapshot.data ?? false;
-                      final bool isRecruitAvailable = widget.post.recruit > _proposersCount;
+                      final bool isRecruitAvailable =
+                          widget.post.recruit > _proposersCount;
 
                       return ElevatedButton(
-                        onPressed: (!isProposers && !isRecruitAvailable) ? null : () async {
-                          // 신청 상태가 아니라면 참여하기 버튼 클릭 처리
-                          await _toggleProposers(widget.post.documentId,
-                              currentUserId!); // 신청 상태 변경
-                          print('참여하기 버튼 클릭');
-                        },
+                        onPressed: (!isProposers && !isRecruitAvailable)
+                            ? null
+                            : () async {
+                                // 신청 상태가 아니라면 참여하기 버튼 클릭 처리
+                                await _toggleProposers(widget.post.documentId,
+                                    currentUserId!); // 신청 상태 변경
+                                print('참여하기 버튼 클릭');
+                              },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor:
-                              isProposers ? Colors.grey : isRecruitAvailable ? Colors.blue : Colors.grey,
+                          backgroundColor: isProposers
+                              ? Colors.grey
+                              : isRecruitAvailable
+                                  ? Colors.blue
+                                  : Colors.grey,
                           padding: EdgeInsets.symmetric(vertical: 12),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
