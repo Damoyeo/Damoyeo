@@ -73,7 +73,8 @@ class CreateModel {
       String content,
       String local,
       int recruit,
-      // List<File> imageFiles,
+      List<File> imageFiles,
+      List<String> imageUrls,
       String address,
       String detailAddress,
       String category,
@@ -82,17 +83,17 @@ class CreateModel {
       ) async {
     // List<String> imageUrls = [];
     //
-    // // 모든 이미지 파일을 업로드하고 URL을 리스트에 추가
-    // for (File file in imageFiles) {
-    //   String url = await uploadImage(file);
-    //   imageUrls.add(url);
-    // }
+    // 모든 이미지 파일을 업로드하고 URL을 리스트에 추가
+    for (File file in imageFiles) {
+      String url = await uploadImage(file);
+      imageUrls.add(url);
+    }
     await FirebaseFirestore.instance.collection('posts').doc(documentId).update({
       'title': title,
       'content': content,
       'local': local,
       'recruit': recruit,
-      // 'imageUrls': imageUrls,
+      'imageUrls': imageUrls,
       'address': address,
       'detailAddress': detailAddress,
       'category': category,

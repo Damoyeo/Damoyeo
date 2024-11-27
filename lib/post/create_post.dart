@@ -47,7 +47,7 @@ class _CreatePostState extends State<CreatePost> {
       _localSelectedValue = post.tag;
       _selectedCategoryIndex = categories.indexOf(post.category);
       _selectedDate = post.meetingTime;
-      // _images = post.imageUrls.map((url) => XFile(url)).toList();
+      _images.addAll(post.imageUrls); // URL은 String으로 추가
     } else {
       // 작성 모드 초기화
       _titleTextController = TextEditingController();
@@ -58,7 +58,6 @@ class _CreatePostState extends State<CreatePost> {
       _recruitTextController = TextEditingController();
     }
   }
-
 
 ///////////////////////////////////////////////////////////////날짜 시간 입력받는 기능
   DateTime? _selectedDate;
@@ -178,8 +177,8 @@ class _CreatePostState extends State<CreatePost> {
   }
 
   // 에러 border
-  OutlineInputBorder customInputBorder(bool isValid, Color enabledColor,
-      Color errorColor) {
+  OutlineInputBorder customInputBorder(
+      bool isValid, Color enabledColor, Color errorColor) {
     return OutlineInputBorder(
       borderSide: BorderSide(
         color: isValid ? enabledColor : errorColor,
@@ -211,7 +210,7 @@ class _CreatePostState extends State<CreatePost> {
   }
 
   final ImagePicker _picker = ImagePicker();
-  List<XFile?> _images = []; // 업로드된 이미지 목록
+  List<dynamic?> _images = []; // 업로드된 이미지 목록
 
   Future<void> _pickImage(ImageSource source) async {
     if (_images.length >= 10) {
@@ -260,7 +259,7 @@ class _CreatePostState extends State<CreatePost> {
   int saveToDatabase() {
     String formattedText = _costTextController.text; // ₩ 1,000 같은 값
     String cleanedText =
-    formattedText.replaceAll(RegExp(r'[^\d]'), ''); // 숫자만 남기기
+        formattedText.replaceAll(RegExp(r'[^\d]'), ''); // 숫자만 남기기
     int amount = int.parse(cleanedText); // 숫자형으로 변환
     return amount;
   }
@@ -335,10 +334,7 @@ class _CreatePostState extends State<CreatePost> {
                   child: SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
                     child: Row(
-                      children: _images
-                          .asMap()
-                          .entries
-                          .map((entry) {
+                      children: _images.asMap().entries.map((entry) {
                         int index = entry.key;
                         var image = entry.value;
                         return Stack(
@@ -347,12 +343,19 @@ class _CreatePostState extends State<CreatePost> {
                               padding: const EdgeInsets.only(right: 8.0),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(8.0),
-                                child: Image.file(
-                                  File(image!.path),
-                                  width: 50,
-                                  height: 50,
-                                  fit: BoxFit.cover,
-                                ),
+                                child: image is String
+                                    ? Image.network(
+                                        image,
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                      )
+                                    : Image.file(
+                                        File(image!.path),
+                                        width: 50,
+                                        height: 50,
+                                        fit: BoxFit.cover,
+                                      ),
                               ),
                             ),
                             Positioned(
@@ -394,9 +397,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '제목',
                 enabledBorder:
-                customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
                 focusedBorder:
-                customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -440,11 +443,10 @@ class _CreatePostState extends State<CreatePost> {
               ),
               hint: Text('지역을 선택해주세요.'),
               items: ['서울특별시', '부산광역시', '대구광역시']
-                  .map((String value) =>
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(value),
-                  ))
+                  .map((String value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(value),
+                      ))
                   .toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -486,18 +488,17 @@ class _CreatePostState extends State<CreatePost> {
                   onPressed: () async {
                     await Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (_) =>
-                            KpostalView(
-                              // useLocalServer: true,
-                              // localPort: 1024,
-                              // kakaoKey: '{Add your KAKAO DEVELOPERS JS KEY}',
-                              callback: (Kpostal result) {
-                                setState(() {
-                                  // 우편번호 코드 postCode = result.postCode;
-                                  _addressTextController.text = result.address;
-                                });
-                              },
-                            ),
+                        builder: (_) => KpostalView(
+                          // useLocalServer: true,
+                          // localPort: 1024,
+                          // kakaoKey: '{Add your KAKAO DEVELOPERS JS KEY}',
+                          callback: (Kpostal result) {
+                            setState(() {
+                              // 우편번호 코드 postCode = result.postCode;
+                              _addressTextController.text = result.address;
+                            });
+                          },
+                        ),
                       ),
                     );
                   },
@@ -566,9 +567,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '모집 인원을 입력해주세요.',
                 enabledBorder:
-                customInputBorder(_isRecruitValid, Colors.grey, Colors.red),
+                    customInputBorder(_isRecruitValid, Colors.grey, Colors.red),
                 focusedBorder:
-                customInputBorder(_isRecruitValid, Colors.blue, Colors.red),
+                    customInputBorder(_isRecruitValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -594,9 +595,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '₩ 활동금액을 입력해주세요.',
                 enabledBorder:
-                customInputBorder(_isCostValid, Colors.grey, Colors.red),
+                    customInputBorder(_isCostValid, Colors.grey, Colors.red),
                 focusedBorder:
-                customInputBorder(_isCostValid, Colors.blue, Colors.red),
+                    customInputBorder(_isCostValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -614,19 +615,18 @@ class _CreatePostState extends State<CreatePost> {
               value: _limitSelectedValue,
               decoration: InputDecoration(
                 enabledBorder:
-                customInputBorder(_isTitleValid, Colors.grey, Colors.red),
+                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
                 focusedBorder:
-                customInputBorder(_isTitleValid, Colors.blue, Colors.red),
+                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               hint: Text('불참 횟수를 선택해주세요.'),
               items: ['1회', '2회', '3회', '무제한']
-                  .map((String value) =>
-                  DropdownMenuItem(
-                    value: value,
-                    child: Text(value),
-                  ))
+                  .map((String value) => DropdownMenuItem(
+                        value: value,
+                        child: Text(value),
+                      ))
                   .toList(),
               onChanged: (String? newValue) {
                 setState(() {
@@ -643,9 +643,9 @@ class _CreatePostState extends State<CreatePost> {
               decoration: InputDecoration(
                 hintText: '모집글 내용을 작성해주세요.',
                 enabledBorder:
-                customInputBorder(_isContentValid, Colors.grey, Colors.red),
+                    customInputBorder(_isContentValid, Colors.grey, Colors.red),
                 focusedBorder:
-                customInputBorder(_isContentValid, Colors.blue, Colors.red),
+                    customInputBorder(_isContentValid, Colors.blue, Colors.red),
                 errorBorder: customInputBorder(
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
@@ -661,7 +661,17 @@ class _CreatePostState extends State<CreatePost> {
                 width: double.infinity, // 화면 너비에 맞춰서 버튼을 꽉 차게 설정
                 child: ElevatedButton(
                   onPressed: () async {
-                    _validateFields();
+                    List<String> stringImages = [];
+                    List<XFile> xfileImages = [];
+
+                    for (var image in _images) {
+                      if (image is String) {
+                        stringImages.add(image); // String 값 추가
+                      } else if (image is XFile) {
+                        xfileImages.add(image); // XFile 값 추가
+                      }
+                    }
+                    _validateFields();  //상태 업데이트
                     // 작성 완료 기능 추가
                     if (_isLocalSelectedValid &&
                         _isTitleValid &&
@@ -693,7 +703,7 @@ class _CreatePostState extends State<CreatePost> {
                             int.parse(_recruitTextController.text),
                             DateTime.now(),
                             'https://cdn.hankyung.com/photo/202409/01.37954272.1.jpg',
-                            convertXFilesToFiles(_images),
+                            convertXFilesToFiles(xfileImages),
                             _addressTextController.text,
                             _detailAddressTextController.text,
                             categories[_selectedCategoryIndex!],
@@ -701,14 +711,15 @@ class _CreatePostState extends State<CreatePost> {
                             _selectedDate!,
                           );
                         } else {
-                          if(widget.post != null) {
+                          if (widget.post != null) {
                             await model.updatePost(
                                 widget.post!.documentId,
                                 _titleTextController.text,
                                 _contentTextController.text,
                                 _localSelectedValue!,
                                 int.parse(_recruitTextController.text),
-                                // convertXFilesToFiles(_images),
+                                 convertXFilesToFiles(xfileImages),
+                                stringImages,
                                 _addressTextController.text,
                                 _detailAddressTextController.text,
                                 categories[_selectedCategoryIndex!],
@@ -716,7 +727,6 @@ class _CreatePostState extends State<CreatePost> {
                                 _selectedDate!);
                           }
                         }
-
 
                         // 업로드가 완료되면 다이얼로그 닫고 화면 이동
                         if (mounted) {
