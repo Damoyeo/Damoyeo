@@ -328,10 +328,11 @@ class _PostDetailState extends State<PostDetail> {
                       return ListTile(
                         leading: CircleAvatar(
                           radius: 24,
-                          backgroundImage: profileImage.isNotEmpty
-                              ? NetworkImage(profileImage)
-                              : AssetImage('assets/default_profile.png')
-                                  as ImageProvider,
+                          backgroundImage: CachedNetworkImageProvider(
+                            profileImage.isNotEmpty
+                                ? profileImage
+                                : 'assets/default_profile.png',
+                          ),
                         ),
                         title: Text(
                           nickname,
@@ -340,9 +341,26 @@ class _PostDetailState extends State<PostDetail> {
                         ),
                         trailing: IconButton(
                           icon: Icon(Icons.send, color: Colors.blue),
-                          onPressed: () {
-                            // 버튼 클릭 시 user_id 사용하여 메시지 창
-                            print('Send message to user ID: $userId');
+                          onPressed: () async {
+                            Navigator.pop(context);
+                            // 채팅방 ID를 가져오거나
+                            final chatPage = ChatPage(); //ChatPage인스턴스 생성
+                            final chatRoomId = await chatPage
+                                .createOrGetChatRoom(userId);
+
+                            // 채팅방이 정상적으로 생성되거나 가져왔을 경우에만 이동
+                            if (chatRoomId != null) {
+                              // 채팅방 화면으로 네비게이트
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ChatDetailPage(
+                                    chatId: chatRoomId,
+                                    otherUserId: userId,
+                                  ), // ChatScreen은 채팅 화면 위젯
+                                ),
+                              );
+                            }
                           },
                         ),
                       );
