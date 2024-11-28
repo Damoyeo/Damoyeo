@@ -14,6 +14,7 @@ class AccountPage extends StatefulWidget {
 }
 
 class _AccountPageState extends State<AccountPage> {
+  String? _currentUserId; // 현재 로그인된 사용자 ID
   String? _profileImageUrl; // 현재 프로필 이미지 URL
   String? _nickname; // 닉네임
   int _posts = 0; // 게시물 수
@@ -23,6 +24,7 @@ class _AccountPageState extends State<AccountPage> {
   @override
   void initState() {
     super.initState();
+    _currentUserId = FirebaseAuth.instance.currentUser?.uid; // 현재 로그인한 사용자 ID 가져오기
     _loadUserProfileData();
   }
 
@@ -53,15 +55,19 @@ class _AccountPageState extends State<AccountPage> {
 
   @override
   Widget build(BuildContext context) {
+    final isCurrentUser = _currentUserId == widget.userId; // 현재 프로필이 본인인지 확인
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Instagram Clone'),
-        actions: [
+        title: const Text('다모여'),
+        actions: isCurrentUser
+            ? [
           IconButton(
             onPressed: () => _logout(context), // 로그아웃 함수 호출
             icon: const Icon(Icons.exit_to_app),
           ),
-        ],
+        ]
+            : null,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -79,8 +85,8 @@ class _AccountPageState extends State<AccountPage> {
                           height: 80,
                           child: CircleAvatar(
                             backgroundImage: _profileImageUrl != null
-                                ? Image.network(_profileImageUrl!).image
-                                : const AssetImage('assets/default_profile.png'),
+                                ? NetworkImage(_profileImageUrl!)
+                                : const AssetImage('assets/default_profile.png') as ImageProvider,
                             backgroundColor: Colors.grey,
                           ),
                         ),
@@ -138,28 +144,28 @@ class _AccountPageState extends State<AccountPage> {
             Expanded(
               child: ListView(
                 children: [
-                  ListTile(
-                    title: const Text('내 정보 수정'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () async {
-                      // 내 정보 수정 페이지로 이동
-                      final result = await Navigator.of(context).push(
-                        MaterialPageRoute(builder: (context) => EditProfilePage()),
-                      );
-
-                      // 프로필 정보가 갱신되었을 경우에만 이미지 즉시 다시 로드
-                      if (result == true) {
-                        _loadUserProfileData(); // 프로필 데이터 갱신
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('프로필이 업데이트되었습니다.')),
+                  if (isCurrentUser) // 본인 프로필일 때만 보이도록 조건 추가
+                    ListTile(
+                      title: const Text('내 정보 수정'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (context) => const EditProfilePage()),
                         );
-                      }
-                    },
-                  ),
-                  const ListTile(
-                    title: Text('비밀번호 변경'),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
+
+                        if (result == true) {
+                          _loadUserProfileData();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('프로필이 업데이트되었습니다.')),
+                          );
+                        }
+                      },
+                    ),
+                  if (isCurrentUser) // 본인 프로필일 때만 보이도록 조건 추가
+                    const ListTile(
+                      title: Text('비밀번호 변경'),
+                      trailing: Icon(Icons.chevron_right),
+                    ),
                   const ListTile(
                     title: Text('활동 내역'),
                     trailing: Icon(Icons.chevron_right),
