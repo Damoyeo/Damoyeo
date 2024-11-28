@@ -290,11 +290,11 @@ class _PostDetailState extends State<PostDetail> {
   }
 
 /////////////////////////////////////////////////////////////////////모달
-  void _showProposersModal(BuildContext context) async {
+  Future<void> _showProposersModal(BuildContext context) async {
     final List<Map<String, String>> proposersData =
-        await fetchProposersData(widget.post.documentId);
+    await fetchProposersData(widget.post.documentId);
 
-    showModalBottomSheet(
+    await showModalBottomSheet(
       context: context,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -344,7 +344,7 @@ class _PostDetailState extends State<PostDetail> {
                           onPressed: () async {
                             Navigator.pop(context);
                             // 채팅방 ID를 가져오거나
-                            final chatPage = ChatPage(); //ChatPage인스턴스 생성
+                            final chatPage = ChatPage(); // ChatPage 인스턴스 생성
                             final chatRoomId = await chatPage
                                 .createOrGetChatRoom(userId);
 
@@ -373,6 +373,7 @@ class _PostDetailState extends State<PostDetail> {
       },
     );
   }
+
 
   //////////////////////////////////////////////////////////////////모달
 
@@ -521,11 +522,11 @@ class _PostDetailState extends State<PostDetail> {
                                       ListTile(
                                         title: Text('참여인원 확인',
                                             style: TextStyle(fontSize: 18)),
-                                        onTap: () {
+                                        onTap: () async{
                                           // 참여인원 확인 기능 구현
+                                          // 이종범 코드 수정부분
+                                          await _showProposersModal(context);
                                           Navigator.pop(context);
-                                          _showProposersModal(
-                                              context); // 참여인원 확인 모달 열기
                                         },
                                       ),
                                     ],
