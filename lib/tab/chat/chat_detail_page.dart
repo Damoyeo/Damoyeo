@@ -3,7 +3,6 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 
-// ChatDetailPage: 특정 채팅방의 대화 내용을 표시하는 화면을 구성하는 Stateful 위젯
 class ChatDetailPage extends StatefulWidget {
   final String chatId; // 채팅방 ID
   final String otherUserId; // 상대방 사용자 ID
@@ -34,10 +33,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     fetchOtherUserData(); // 페이지 로드시 상대방의 이름과 프로필 이미지를 가져옴
   }
 
-  // fetchOtherUserData: 상대방 사용자의 이름과 프로필 이미지를 Firestore에서 가져오는 함수
   Future<void> fetchOtherUserData() async {
     final userDoc = await _firestore.collection('users').doc(widget.otherUserId).get();
-    print('Fetched user data: ${userDoc.data()}'); // userDoc의 데이터를 출력
     if (userDoc.exists) {
       setState(() {
         otherUserName = userDoc['nickname'] ?? 'Unknown';
@@ -47,57 +44,56 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     }
   }
 
-  // markMessagesAsRead: 상대방이 보낸 읽지 않은 메시지를 읽음 상태로 변경하는 함수
   void markMessagesAsRead() async {
-    final currentUser = _auth.currentUser; // 현재 로그인한 사용자 가져오기
-    if (currentUser == null) return; // 로그인하지 않은 경우 함수 종료
+    final currentUser = _auth.currentUser;
+    if (currentUser == null) return;
 
-    // Firestore에서 상대방이 보낸 읽지 않은 메시지들을 조회
     final unreadMessages = await _firestore
-        .collection('chats') // 'chats' 컬렉션에서
-        .doc(widget.chatId) // 특정 채팅방 문서 접근
-        .collection('messages') // 메시지 하위 컬렉션 접근
-        .where('senderId', isEqualTo: widget.otherUserId) // 상대방이 보낸 메시지만 필터링
-        .where('isRead', isEqualTo: false) // 읽지 않은 메시지만 필터링
+        .collection('chats')
+        .doc(widget.chatId)
+        .collection('messages')
+        .where('senderId', isEqualTo: widget.otherUserId)
+        .where('isRead', isEqualTo: false)
         .get();
 
-    // 조회된 각 메시지를 읽음 상태로 업데이트
     for (var doc in unreadMessages.docs) {
-      doc.reference.update({'isRead': true}); // 'isRead' 필드를 true로 설정
+      doc.reference.update({'isRead': true});
     }
   }
 
-  // _sendMessage: 새로운 메시지를 Firestore에 저장하는 함수
   void _sendMessage() async {
-    if (_controller.text.isNotEmpty) { // 입력 필드가 비어있지 않을 때만 실행
-      final currentUser = _auth.currentUser; // 현재 사용자 가져오기
-      if (currentUser == null) return; // 사용자가 없는 경우 종료
+    if (_controller.text.isNotEmpty) {
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return;
 
-      // 고유 메시지 ID 생성 (사용자 ID와 현재 시간 기반)
       final customMessageId = "${currentUser.uid}_${DateTime.now().millisecondsSinceEpoch}";
+
+      // _controller.text 값을 임시 변수에 저장
+      final String messageText = _controller.text;
+
+      // 입력 필드를 즉시 초기화
+      _controller.clear();
 
       // Firestore에 메시지 저장
       await _firestore
-          .collection('chats') // 'chats' 컬렉션 접근
-          .doc(widget.chatId) // 특정 채팅방 문서 접근
-          .collection('messages') // 메시지 하위 컬렉션 접근
-          .doc(customMessageId) // 생성한 메시지 ID로 문서 참조
+          .collection('chats')
+          .doc(widget.chatId)
+          .collection('messages')
+          .doc(customMessageId)
           .set({
-        'messageId': customMessageId, // 메시지 ID
-        'senderId': currentUser.uid, // 현재 사용자 ID
-        'senderName': currentUser.displayName ?? 'Unknown', // 사용자 이름
-        'message': _controller.text, // 메시지 내용
-        'timestamp': FieldValue.serverTimestamp(), // Firestore 서버 타임스탬프
-        'isRead': false, // 새 메시지는 기본적으로 읽지 않은 상태
+        'messageId': customMessageId,
+        'senderId': currentUser.uid,
+        'senderName': currentUser.displayName ?? 'Unknown',
+        'message': messageText, // 임시 변수에 저장한 메시지 사용
+        'timestamp': FieldValue.serverTimestamp(),
+        'isRead': false,
       });
 
-      // 채팅방 문서에 마지막 메시지 내용과 시간 업데이트
+      // 마지막 메시지 업데이트
       await _firestore.collection('chats').doc(widget.chatId).update({
-        'lastMessage': _controller.text, // 마지막 메시지 내용
-        'timestamp': FieldValue.serverTimestamp(), // 마지막 메시지 시간
+        'lastMessage': messageText, // 임시 변수에 저장한 메시지 사용
+        'timestamp': FieldValue.serverTimestamp(),
       });
-
-      _controller.clear(); // 입력 필드 초기화
     }
   }
 
@@ -105,84 +101,80 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.white, // AppBar 배경 색상 설정
-        iconTheme: const IconThemeData(color: Colors.black), // 아이콘 색상 설정
+        backgroundColor: Colors.white,
+        iconTheme: const IconThemeData(color: Colors.black),
         title: Text(
-          "$otherName님과의 채팅방", // AppBar 제목에 상대방 이름 표시
-          style: const TextStyle(color: Colors.black), // 텍스트 색상 설정
+          "$otherName님과의 채팅방",
+          style: const TextStyle(color: Colors.black),
         ),
-        elevation: 1, // AppBar 그림자 높이
+        elevation: 1,
       ),
-      backgroundColor: Colors.white, // Scaffold의 배경색
+      backgroundColor: Colors.white,
       body: Column(
         children: [
           Expanded(
-            // StreamBuilder를 사용하여 실시간으로 Firestore의 메시지를 가져옴
             child: StreamBuilder<QuerySnapshot>(
               stream: _firestore
                   .collection('chats')
                   .doc(widget.chatId)
                   .collection('messages')
-                  .orderBy('timestamp', descending: true) // 최신 메시지부터 정렬
+                  .orderBy('timestamp', descending: true)
                   .snapshots(),
               builder: (context, snapshot) {
-                if (!snapshot.hasData) { // 데이터가 없을 때 로딩 표시
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
                 }
 
-                final messages = snapshot.data!.docs; // 메시지 목록 저장
+                final messages = snapshot.data!.docs;
 
-                // 새로운 메시지가 수신될 때마다 읽음 상태로 업데이트
                 markMessagesAsRead();
 
                 return ListView.builder(
-                  reverse: true, // 메시지를 최신순으로 표시
+                  reverse: true,
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final messageData = messages[index];
-                    final message = messageData['message']; // 메시지 내용
-                    final senderId = messageData['senderId']; // 보낸 사람 ID
-                    final timestamp = messageData['timestamp'] as Timestamp?; // 타임스탬프
-                    final isRead = messageData['isRead'] ?? false; // 읽음 여부
-                    final isCurrentUser = senderId == _auth.currentUser!.uid; // 메시지 발신자가 현재 사용자 여부 확인
+                    final message = messageData['message'];
+                    final senderId = messageData['senderId'];
+                    final timestamp = messageData['timestamp'] as Timestamp?;
+                    final isRead = messageData['isRead'] ?? false;
+                    final isCurrentUser = senderId == _auth.currentUser!.uid;
 
-                    // 타임스탬프를 'yyyy년 M월 d일' 형식으로 변환
                     String messageDate = '';
                     if (timestamp != null) {
                       final date = timestamp.toDate();
                       messageDate = DateFormat('yyyy년 M월 d일').format(date);
                     }
 
-                    // 현재 메시지의 날짜가 이전 메시지와 다를 때만 날짜 표시
                     bool showDate = false;
                     if (index == messages.length - 1 ||
                         DateFormat('yyyy년 M월 d일').format(
-                            (messages[index + 1]['timestamp'] as Timestamp)
-                                .toDate()) !=
-                            messageDate) {
+                            (messages[index + 1]['timestamp'] as Timestamp).toDate()) !=
+                            messageDate &&
+                            messageDate != '') {
                       showDate = true;
                     }
 
                     return Column(
                       crossAxisAlignment: isCurrentUser
-                          ? CrossAxisAlignment.end // 현재 사용자가 보낸 경우 오른쪽 정렬
-                          : CrossAxisAlignment.start, // 상대방이 보낸 경우 왼쪽 정렬
+                          ? CrossAxisAlignment.end
+                          : CrossAxisAlignment.start,
                       children: [
-                        if (showDate) // 날짜가 다른 경우에만 날짜를 표시
+                        if (showDate)
                           Padding(
                             padding: const EdgeInsets.symmetric(vertical: 8.0),
                             child: Row(
                               children: [
                                 Expanded(
                                   child: Divider(
-                                    color: Colors.grey[400], // 날짜 선 색상
-                                    thickness: 0.5, // 선 두께
+                                    color: Colors.grey[400],
+                                    thickness: 0.5,
                                   ),
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(horizontal: 8.0),
                                   child: Text(
-                                    messageDate, // 날짜 텍스트
+                                    messageDate,
                                     style: TextStyle(
                                       color: Colors.grey[600],
                                       fontSize: 12,
@@ -201,10 +193,10 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                           ),
                         Row(
                           mainAxisAlignment: isCurrentUser
-                              ? MainAxisAlignment.end // 현재 사용자가 보낸 메시지는 오른쪽 정렬
-                              : MainAxisAlignment.start, // 상대방이 보낸 메시지는 왼쪽 정렬
+                              ? MainAxisAlignment.end
+                              : MainAxisAlignment.start,
                           children: [
-                            if (isCurrentUser && !isRead) // 내가 보낸 메시지의 읽음 상태를 메시지 왼쪽에 표시
+                            if (isCurrentUser && !isRead)
                               Padding(
                                 padding: const EdgeInsets.only(right: 0.0),
                                 child: Text(
@@ -215,20 +207,17 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                   ),
                                 ),
                               ),
-                            if (!isCurrentUser) // 상대방 메시지에만 프로필 사진과 닉네임 표시
+                            if (!isCurrentUser)
                               Padding(
-                                padding: const EdgeInsets.only(
-                                    left: 5.0, right: 0.0),
+                                padding: const EdgeInsets.only(left: 5.0, right: 0.0),
                                 child: Column(
                                   children: [
                                     CircleAvatar(
                                       radius: 20,
-                                      backgroundImage: otherUserProfileImage !=
-                                          null &&
+                                      backgroundImage: otherUserProfileImage != null &&
                                           otherUserProfileImage!.isNotEmpty
                                           ? NetworkImage(otherUserProfileImage!)
-                                          : AssetImage(
-                                          'assets/default_profile.png')
+                                          : AssetImage('assets/default_profile.png')
                                       as ImageProvider,
                                     ),
                                     const SizedBox(height: 4),
@@ -240,35 +229,41 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                                   ],
                                 ),
                               ),
-                            Align(
-                              alignment: isCurrentUser
-                                  ? Alignment.centerRight
-                                  : Alignment.centerLeft,
-                              child: Container(
-                                padding: const EdgeInsets.all(12),
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 5, horizontal: 5),
-                                decoration: BoxDecoration(
-                                  color: isCurrentUser
-                                      ? Colors.blue[100]
-                                      : Colors.grey[300],
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: const Radius.circular(12),
-                                    topRight: const Radius.circular(12),
-                                    bottomLeft: isCurrentUser
-                                        ? const Radius.circular(12)
-                                        : const Radius.circular(0),
-                                    bottomRight: isCurrentUser
-                                        ? const Radius.circular(0)
-                                        : const Radius.circular(12),
-                                  ),
-                                ),
-                                child: Text(
-                                  message,
-                                  style: TextStyle(
+                            Flexible(
+                              child: FractionallySizedBox(
+                                widthFactor: 0.6, // 너비를 화면의 60%로 제한
+                                alignment: isCurrentUser
+                                    ? Alignment.centerRight
+                                    : Alignment.centerLeft,
+                                child: Container(
+                                  padding: const EdgeInsets.all(12),
+                                  margin: const EdgeInsets.symmetric(
+                                      vertical: 5, horizontal: 5),
+                                  decoration: BoxDecoration(
                                     color: isCurrentUser
-                                        ? Colors.blue[900]
-                                        : Colors.black,
+                                        ? Colors.blue[100]
+                                        : Colors.grey[300],
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: const Radius.circular(12),
+                                      topRight: const Radius.circular(12),
+                                      bottomLeft: isCurrentUser
+                                          ? const Radius.circular(12)
+                                          : const Radius.circular(0),
+                                      bottomRight: isCurrentUser
+                                          ? const Radius.circular(0)
+                                          : const Radius.circular(12),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    message,
+                                    style: TextStyle(
+                                      color: isCurrentUser
+                                          ? Colors.blue[900]
+                                          : Colors.black,
+                                    ),
+                                    softWrap: true,
+                                    overflow: TextOverflow.visible,
+                                    textAlign: TextAlign.start,
                                   ),
                                 ),
                               ),
@@ -289,6 +284,8 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    maxLines: null,
+                    textInputAction: TextInputAction.newline,
                     decoration: InputDecoration(
                       hintText: '메시지를 입력하세요...',
                       filled: true,
