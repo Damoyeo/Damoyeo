@@ -519,16 +519,6 @@ class _PostDetailState extends State<PostDetail> {
                                           }
                                         },
                                       ),
-                                      ListTile(
-                                        title: Text('참여인원 확인',
-                                            style: TextStyle(fontSize: 18)),
-                                        onTap: () async{
-                                          // 참여인원 확인 기능 구현
-                                          // 이종범 코드 수정부분
-                                          await _showProposersModal(context);
-                                          Navigator.pop(context);
-                                        },
-                                      ),
                                     ],
                                   ),
                                 );
@@ -725,8 +715,24 @@ class _PostDetailState extends State<PostDetail> {
                       final isProposers = snapshot.data ?? false;
                       final bool isRecruitAvailable =
                           widget.post.recruit > _proposersCount;
-
-                      return ElevatedButton(
+                      if(currentUserId == widget.post.id){  //작성자일때
+                        return ElevatedButton(
+                          onPressed:() async {
+                            await _showProposersModal(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.blue,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                          ),
+                          child: Text('참여인원 확인 ${_proposersCount}/${widget.post.recruit}', //
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        );
+                      } else{  //작성자가 아닐때
+                        return ElevatedButton(
                         onPressed: (!isProposers && !isRecruitAvailable)
                             ? null
                             : () async {
@@ -755,7 +761,7 @@ class _PostDetailState extends State<PostDetail> {
                           // 좋아요 상태가 아닐 때 표시
                           style: TextStyle(fontSize: 16, color: Colors.white),
                         ),
-                      );
+                      );}
                     },
                   ),
                 ),
