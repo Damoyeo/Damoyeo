@@ -549,7 +549,7 @@ class _PostDetailState extends State<PostDetail> {
                       ? SmoothPageIndicator(
                           controller: _pageController,
                           count: _urls.length,
-                          effect: WormEffect(
+                          effect: const WormEffect(
                             dotColor: Color(0xffC5C6CC),
                             activeDotColor: Color(0xff006FFD),
                             radius: 2,
@@ -585,7 +585,7 @@ class _PostDetailState extends State<PostDetail> {
                         )
                       : Container(
                           color: Colors.grey,
-                          child: Center(
+                          child: const Center(
                             child: Icon(
                               Icons.image,
                               color: Colors.white,
@@ -608,6 +608,7 @@ class _PostDetailState extends State<PostDetail> {
                           children: [
                             Row(
                               children: [
+                                // 작성자의 프로필로 이동
                                 GestureDetector(
                                   onTap: () {
                                     Navigator.push(

@@ -79,9 +79,8 @@ class _AccountPageState extends State<AccountPage> {
                           height: 80,
                           child: CircleAvatar(
                             backgroundImage: _profileImageUrl != null
-                                ? NetworkImage(_profileImageUrl!)
-                                : const NetworkImage(
-                                'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'), // 기본 이미지
+                                ? Image.network(_profileImageUrl!).image
+                                : const AssetImage('assets/default_profile.png'),
                             backgroundColor: Colors.grey,
                           ),
                         ),
