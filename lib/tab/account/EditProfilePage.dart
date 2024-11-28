@@ -63,8 +63,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
     });
 
     try {
+      String? downloadURL;
+
+      // 이미지가 선택된 경우에만 Storage 업로드 실행
       if (_images.isNotEmpty) {
-        // Firebase Storage 업로드
         final storageRef = FirebaseStorage.instance
             .ref()
             .child('profile_images')
@@ -72,18 +74,27 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
         final uploadTask = storageRef.putFile(File(_images.first!.path));
         final snapshot = await uploadTask;
-        final downloadURL = await snapshot.ref.getDownloadURL();
-        print("Image uploaded. URL: $downloadURL");  // 업로드 확인
-
-        // Firestore에 URL 업데이트
-        await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
-          'nickname': _nicknameController.text,
-          'phone': _phoneNumController.text,
-          'profile_image': downloadURL,
-        }, SetOptions(merge: true));  // 새로운 데이터만 업데이트하는 기능
+        downloadURL = await snapshot.ref.getDownloadURL();
+        print("Image uploaded. URL: $downloadURL");
       }
 
-      // 저장 성공 시, 이전 화면으로 이동
+      // Firestore에 nickname, phone, profile_image 업데이트
+      final updateData = {
+        'nickname': _nicknameController.text, // 닉네임 업데이트
+        'phone': _phoneNumController.text,   // 전화번호 업데이트
+      };
+
+      // 이미지가 선택된 경우에만 profile_image 추가
+      if (downloadURL != null) {
+        updateData['profile_image'] = downloadURL;
+      }
+
+      await FirebaseFirestore.instance.collection('users').doc(user.uid).set(
+        updateData,
+        SetOptions(merge: true),
+      );
+
+      // 저장 성공 시 이전 화면으로 이동
       Navigator.pop(context, true);
     } on FirebaseException catch (e) {
       print("Error updating profile: ${e.message}");
@@ -96,6 +107,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       });
     }
   }
+
 
   final ImagePicker _picker = ImagePicker();
   List<XFile?> _images = []; // 업로드된 이미지 목록
