@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:gomoph/tab/favorite/favorite_page.dart';
 import 'package:gomoph/tab/myActivity/MyActivity_page.dart';
 import 'package:gomoph/tab/postList/postList_page.dart';
-import 'package:gomoph/tab/search/search_page.dart';
 
 import 'account/account_page.dart';
-import 'home/home_page.dart';
 import 'chat/chat_page.dart';
 
 class TabPage extends StatefulWidget {
