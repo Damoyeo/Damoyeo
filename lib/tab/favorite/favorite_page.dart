@@ -203,8 +203,8 @@ class _FavoritePageState extends State<FavoritePage> {
                     width: 50.0,
                     height: 50.0,
                     color: Colors.grey[300],
-                    child: post.imageUrl != null
-                        ? Image.network(post.imageUrl!, fit: BoxFit.cover)
+                    child: post.imageUrls.isNotEmpty
+                        ? Image.network(post.imageUrls[0]!, fit: BoxFit.cover)
                         : Icon(Icons.image, color: Colors.white),
                   ),
                   title: Text(post.title),

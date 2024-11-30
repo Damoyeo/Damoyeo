@@ -25,7 +25,7 @@ class _MyActivityPageState extends State<MyActivityPage>
   Stream<List<Post>> getMyPostsStream() {
     return FirebaseFirestore.instance
         .collection('posts')
-        .where('user_id', isEqualTo: userId)
+        .where('id', isEqualTo: userId)
         .snapshots()
         .map((snapshot) {
       return snapshot.docs.map((doc) => Post.fromJson(doc.data(), doc.id)).toList();
@@ -218,8 +218,8 @@ class PostCard extends StatelessWidget {
           width: 50.0,
           height: 50.0,
           color: Colors.grey[300],
-          child: post.imageUrl.isNotEmpty
-              ? Image.network(post.imageUrl, fit: BoxFit.cover)
+          child: post.imageUrls.isNotEmpty
+              ? Image.network(post.imageUrls[0], fit: BoxFit.cover)
               : Icon(Icons.image, color: Colors.white),
         ),
         title: Text(post.title),
