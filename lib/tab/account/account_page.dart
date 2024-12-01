@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'EditProfilePage.dart';
+import 'EditPassword_page.dart';
 import '../myActivity/MyActivity_page.dart';
 
 class AccountPage extends StatefulWidget {
@@ -163,9 +164,15 @@ class _AccountPageState extends State<AccountPage> {
                       },
                     ),
                   if (isCurrentUser) // 본인 프로필일 때만 보이도록 조건 추가
-                    const ListTile(
-                      title: Text('비밀번호 변경'),
-                      trailing: Icon(Icons.chevron_right),
+                    ListTile(
+                      title: const Text('비밀번호 변경'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (
+                              context) => const EditPasswordPage()),
+                        );
+                      },
                     ),
                   ListTile(
                     title: const Text('활동 내역'),
@@ -173,13 +180,9 @@ class _AccountPageState extends State<AccountPage> {
                     onTap: () async {
                       final result = await Navigator.of(context).push(
                         MaterialPageRoute(builder: (
-                            context) => const EditProfilePage()),
+                            context) => const MyActivityPage()),
                       );
                     },
-                  ),
-                  const ListTile(
-                    title: Text('작성글 내역'),
-                    trailing: Icon(Icons.chevron_right),
                   ),
                 ],
               ),
