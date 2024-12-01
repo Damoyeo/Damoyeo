@@ -12,8 +12,10 @@ class ChatPage extends StatelessWidget {
     final userDoc = await FirebaseFirestore.instance.collection('users').doc(userId).get();
     if (userDoc.exists) {
       return {
-        'name': userDoc['name'] ?? 'Unknown',
-        'profile_image': userDoc['profile_image'] ?? '',
+        // user_name필드가 없다면 name필드로 대체
+        'name': userDoc['user_name'] ?? userDoc['name'] ?? 'Unknown',
+        //만약 프로필 사진이 없다면 기본 이미지로 대체
+        'profile_image': userDoc['profile_image'] ?? 'https://firebasestorage.googleapis.com/v0/b/test-project-a18d0.firebasestorage.app/o/profile_images%2FId9aYrIBRqf5kB2hb2fU8QU7mFV2.jpg?alt=media&token=c1624867-0b33-4e56-8c8b-4be3c2b9a569',
       };
     }
     return {'name': 'Unknown', 'profile_image': ''};
@@ -191,6 +193,13 @@ class ChatPage extends StatelessWidget {
 
           final chats = snapshot.data!.docs; // 채팅방 목록
 
+          // 채팅방 목록을 pinned 속성에 따라 정렬
+          chats.sort((a, b) {
+            bool aPinned = a['pinned'] ?? false;
+            bool bPinned = b['pinned'] ?? false;
+            return (bPinned ? 1 : 0) - (aPinned ? 1 : 0);
+          });
+
           return ListView.builder(
             itemCount: chats.length,
             itemBuilder: (context, index) {
@@ -208,9 +217,18 @@ class ChatPage extends StatelessWidget {
               return FutureBuilder<Map<String, dynamic>>(
                 future: getUserInfo(otherUserId),
                 builder: (context, userSnapshot) {
-                  if (!userSnapshot.hasData) {
+                  if (userSnapshot.connectionState == ConnectionState.waiting) {
                     return const ListTile(
                       title: Text('Loading...'),
+                    );
+                  } else if (userSnapshot.hasError) {
+                    print('Error loading user info: ${userSnapshot.error}');
+                    return const ListTile(
+                      title: Text('Error loading user info'),
+                    );
+                  } else if (!userSnapshot.hasData) {
+                    return const ListTile(
+                      title: Text('No user info available'),
                     );
                   }
 
