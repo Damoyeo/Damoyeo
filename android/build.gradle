@@ -6,6 +6,7 @@ buildscript {
     dependencies {
         // Firebase 플러그인 추가
         classpath 'com.google.gms:google-services:4.3.10' // 최신 버전 확인 필요
+
     }
 }
 

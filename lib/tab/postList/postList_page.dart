@@ -12,19 +12,22 @@ class PostListPage extends StatefulWidget {
   _PostListPageState createState() => _PostListPageState();
 }
 
-// 게시물 리스트 페이지
 class _PostListPageState extends State<PostListPage> {
   String _sortOption = '최신순'; // 기본 정렬 기준은 최신순
+  String _filterOption = '전체보기'; // 기본 필터 옵션
 
-  // Firestore에서 'posts' 컬렉션의 데이터를 스트림 형태로 가져오는 변수
   Stream<QuerySnapshot<Post>> getPostsStream() {
     Query<Post> query =
-        FirebaseFirestore.instance.collection('posts').withConverter<Post>(
-              fromFirestore: (snapshot, _) => Post.fromJson(snapshot.data()!),
-              toFirestore: (post, _) => post.toJson(),
-            );
+    FirebaseFirestore.instance.collection('posts').withConverter<Post>(
+      fromFirestore: (snapshot, _) =>
+          Post.fromJson(snapshot.data()!, snapshot.id),
+      toFirestore: (post, _) => post.toJson(),
+    );
 
-    // 선택한 정렬 옵션에 따라 쿼리를 설정
+    if (_filterOption != '전체보기') {
+      query = query.where('category', isEqualTo: _filterOption); // 선택된 필터 적용
+    }
+
     if (_sortOption == '최신순') {
       query = query.orderBy('createdAt', descending: true);
     } else if (_sortOption == '오래된순') {
@@ -38,7 +41,6 @@ class _PostListPageState extends State<PostListPage> {
     return query.snapshots();
   }
 
-  // 정렬 모달 시트를 표시하는 함수
   void _showSortOptions(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -48,14 +50,14 @@ class _PostListPageState extends State<PostListPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              // 최신순과 오래된순 옵션
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
                     onPressed: () {
                       setState(() {
-                        _sortOption = _sortOption == '최신순' ? '오래된순' : '최신순';
+                        _sortOption =
+                        _sortOption == '최신순' ? '오래된순' : '최신순';
                       });
                       Navigator.pop(context);
                     },
@@ -69,14 +71,14 @@ class _PostListPageState extends State<PostListPage> {
                   ),
                 ],
               ),
-              // 가나다순과 가나다 역순 옵션
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   TextButton(
                     onPressed: () {
                       setState(() {
-                        _sortOption = _sortOption == '가나다순' ? '가나다 역순' : '가나다순';
+                        _sortOption =
+                        _sortOption == '가나다순' ? '가나다 역순' : '가나다순';
                       });
                       Navigator.pop(context);
                     },
@@ -97,44 +99,153 @@ class _PostListPageState extends State<PostListPage> {
     );
   }
 
+  void _showFilterOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (BuildContext context) {
+        return Container(
+          padding: EdgeInsets.all(16.0),
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: [
+              FilterButton(
+                label: '전체보기',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '전체보기';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '친목',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '친목';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '스포츠',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '스포츠';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '스터디',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '스터디';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '여행',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '여행';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '알바',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '알바';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '게임',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '게임';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '봉사',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '봉사';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '헬스',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '헬스';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '음악',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '음악';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '기타',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '기타';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor:Colors.white, //배경색 고정
+        backgroundColor: Colors.white,
         centerTitle: true,
         title: Row(
           children: [
-            SizedBox(width: 8.0), // 좌측 여백
-            // Sort 버튼
+            SizedBox(width: 8.0),
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.blue),
-                borderRadius: BorderRadius.circular(20), // 둥근 모서리 테두리
+                borderRadius: BorderRadius.circular(20),
               ),
               child: TextButton.icon(
                 onPressed: () => _showSortOptions(context),
-                // Sort 모달 창 표시
                 icon: Icon(Icons.unfold_more, color: Colors.blue),
-                // 위아래 화살표 아이콘
-                label: Text(
-                  'Sort',
-                  style: TextStyle(color: Colors.blue),
-                ),
+                label: Text('Sort', style: TextStyle(color: Colors.blue)),
               ),
             ),
             Spacer(),
             Text(
               '모집 게시물',
               style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+              TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
             ),
             Spacer(),
-            // Filter 버튼
             Container(
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.blue),
-                borderRadius: BorderRadius.circular(20), // 둥근 모서리 테두리
+                borderRadius: BorderRadius.circular(20),
               ),
               child: TextButton.icon(
                 onPressed: () => _showFilterOptions(context),
@@ -142,12 +253,12 @@ class _PostListPageState extends State<PostListPage> {
                 label: Text('Filter', style: TextStyle(color: Colors.blue)),
               ),
             ),
-            SizedBox(width: 8.0), // 우측 여백
+            SizedBox(width: 8.0),
           ],
         ),
       ),
       body: StreamBuilder<QuerySnapshot<Post>>(
-        stream: getPostsStream(), // 선택한 정렬 기준에 따라 데이터 스트림 설정
+        stream: getPostsStream(),
         builder: (context, snapshot) {
           if (snapshot.hasError) {
             return Center(child: Text('Firestore 연결 오류 발생'));
@@ -173,8 +284,11 @@ class _PostListPageState extends State<PostListPage> {
                     width: 50.0,
                     height: 50.0,
                     color: Colors.grey[300],
-                    child: post.imageUrl != null
-                        ? Image.network(post.imageUrl!, fit: BoxFit.cover)
+                    child: post.imageUrls.isNotEmpty
+                        ? Image.network(
+                      post.imageUrls[0]!,
+                      fit: BoxFit.cover,
+                    )
                         : Icon(Icons.image, color: Colors.white),
                   ),
                   title: Text(post.title),
@@ -186,16 +300,19 @@ class _PostListPageState extends State<PostListPage> {
                           : post.content),
                       Text('지역: ${post.tag}'),
                       FutureBuilder<int>(
-                        future: _getProposersCount(post.id),
+                        future: _getProposersCount(post.documentId),
                         builder: (context, snapshot) {
                           final proposersCount = snapshot.data ?? 0;
-                          return Text('참여인원 $proposersCount/${post.recruit}');
+                          return Text(
+                              '참여인원: $proposersCount/${post.recruit}');
                         },
                       ),
                     ],
                   ),
                   trailing: FutureBuilder<bool>(
-                    future: userId != null ? _isLiked(post.id, userId!) : Future.value(false),
+                    future: userId != null
+                        ? _isLiked(post.documentId, userId!)
+                        : Future.value(false),
                     builder: (context, snapshot) {
                       bool isLiked = snapshot.data ?? false;
                       return IconButton(
@@ -205,7 +322,7 @@ class _PostListPageState extends State<PostListPage> {
                         ),
                         onPressed: () {
                           if (userId != null) {
-                            _toggleFavorite(post.id, userId!);
+                            _toggleFavorite(post.documentId, userId!);
                           } else {
                             print("User not logged in");
                           }
@@ -223,12 +340,10 @@ class _PostListPageState extends State<PostListPage> {
                   },
                 ),
               );
-
             },
           );
         },
       ),
-      //글쓰기 플로팅버튼
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           Navigator.push(
@@ -241,12 +356,11 @@ class _PostListPageState extends State<PostListPage> {
     );
   }
 
-  // 사용자 ID 가져오기
   String? getCurrentUserId() {
     final user = FirebaseAuth.instance.currentUser;
     return user?.uid;
   }
-// -----------------------------------------------------------------------좋아요 관련
+
   Future<bool> _isLiked(String postId, String userId) async {
     final favoriteRef = FirebaseFirestore.instance
         .collection('posts')
@@ -275,37 +389,7 @@ class _PostListPageState extends State<PostListPage> {
     }
     setState(() {});
   }
-// -----------------------------------------------------------------------좋아요 관련
 
-  // 필터 모달 시트를 표시하는 함수
-  void _showFilterOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (BuildContext context) {
-        return Container(
-          padding: EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text('Option 1'),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-              ListTile(
-                title: Text('Option 2'),
-                onTap: () {
-                  Navigator.pop(context);
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
- // 신청자 proposers 카운트하는 함수
   Future<int> _getProposersCount(String postId) async {
     final collection = FirebaseFirestore.instance
         .collection('posts')
@@ -313,5 +397,32 @@ class _PostListPageState extends State<PostListPage> {
         .collection('proposers');
     final querySnapshot = await collection.get();
     return querySnapshot.size;
+  }
+}
+
+//필터 옵션 디자인
+class FilterButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const FilterButton({Key? key, required this.label, required this.onTap})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 16.0),
+        ),
+      ),
+    );
   }
 }

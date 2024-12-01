@@ -13,6 +13,8 @@ class FavoritePage extends StatefulWidget {
 
 class _FavoritePageState extends State<FavoritePage> {
   String _sortOption = '최신순'; // 기본 정렬 기준
+  String _filterOption = '전체보기'; // 기본 필터 옵션
+
 
   // Firestore에서 현재 사용자가 찜한 게시물만 가져오는 스트림
   Stream<List<Post>> getFavoritePostsStream() async* {
@@ -28,7 +30,12 @@ class _FavoritePageState extends State<FavoritePage> {
         // 각 게시물의 favorite 하위 컬렉션에 userId 문서가 있는지 확인
         final favoriteDoc = await postDoc.reference.collection('favorite').doc(userId).get();
         if (favoriteDoc.exists) {
-          favoritePosts.add(Post.fromJson(postDoc.data()));
+          final post = Post.fromJson(postDoc.data(), postDoc.id);
+
+          // 필터 적용
+          if (_filterOption == '전체보기' || post.category == _filterOption) {
+            favoritePosts.add(post);
+          }
         }
       }
 
@@ -111,18 +118,106 @@ class _FavoritePageState extends State<FavoritePage> {
       builder: (BuildContext context) {
         return Container(
           padding: EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
+          child: Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
             children: [
-              ListTile(
-                title: Text('Option 1'),
+              FilterButton(
+                label: '전체보기',
                 onTap: () {
+                  setState(() {
+                    _filterOption = '전체보기';
+                  });
                   Navigator.pop(context);
                 },
               ),
-              ListTile(
-                title: Text('Option 2'),
+              FilterButton(
+                label: '친목',
                 onTap: () {
+                  setState(() {
+                    _filterOption = '친목';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '스포츠',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '스포츠';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '스터디',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '스터디';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '여행',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '여행';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '알바',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '알바';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '게임',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '게임';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '봉사',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '봉사';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '헬스',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '헬스';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '음악',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '음악';
+                  });
+                  Navigator.pop(context);
+                },
+              ),
+              FilterButton(
+                label: '기타',
+                onTap: () {
+                  setState(() {
+                    _filterOption = '기타';
+                  });
                   Navigator.pop(context);
                 },
               ),
@@ -203,8 +298,8 @@ class _FavoritePageState extends State<FavoritePage> {
                     width: 50.0,
                     height: 50.0,
                     color: Colors.grey[300],
-                    child: post.imageUrl != null
-                        ? Image.network(post.imageUrl!, fit: BoxFit.cover)
+                    child: post.imageUrls.isNotEmpty
+                        ? Image.network(post.imageUrls[0]!, fit: BoxFit.cover)
                         : Icon(Icons.image, color: Colors.white),
                   ),
                   title: Text(post.title),
@@ -216,16 +311,17 @@ class _FavoritePageState extends State<FavoritePage> {
                           : post.content),
                       Text('지역: ${post.tag}'),
                       FutureBuilder<int>(
-                        future: _getProposersCount(post.id),
+                        future: _getProposersCount(post.documentId), // post ID 사용
                         builder: (context, snapshot) {
                           final proposersCount = snapshot.data ?? 0;
                           return Text('참여인원 $proposersCount/${post.recruit}');
                         },
                       ),
+
                     ],
                   ),
                   trailing: FutureBuilder<bool>(
-                    future: userId != null ? _isLiked(post.id, userId!) : Future.value(false),
+                    future: userId != null ? _isLiked(post.documentId, userId!) : Future.value(false),
                     builder: (context, snapshot) {
                       bool isLiked = snapshot.data ?? false;
                       return IconButton(
@@ -235,7 +331,7 @@ class _FavoritePageState extends State<FavoritePage> {
                         ),
                         onPressed: () {
                           if (userId != null) {
-                            _toggleFavorite(post.id, userId!);
+                            _toggleFavorite(post.documentId, userId!);
                           } else {
                             print("User not logged in");
                           }
@@ -303,5 +399,33 @@ class _FavoritePageState extends State<FavoritePage> {
         .collection('proposers');
     final querySnapshot = await collection.get();
     return querySnapshot.size;
+  }
+}
+
+
+//필터 옵션 디자인
+class FilterButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onTap;
+
+  const FilterButton({Key? key, required this.label, required this.onTap})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+        decoration: BoxDecoration(
+          border: Border.all(color: Colors.grey),
+          borderRadius: BorderRadius.circular(16.0),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 16.0),
+        ),
+      ),
+    );
   }
 }

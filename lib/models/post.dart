@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 
 class Post {
+  String documentId; // Firestore 문서 ID
   String id;
   String title;
   String content;
@@ -17,6 +18,7 @@ class Post {
   DateTime meetingTime;
 
   Post({
+    required this.documentId, // Firestore 문서 ID
     required this.id,
     required this.title,
     required this.content,
@@ -33,8 +35,9 @@ class Post {
   });
 
   // Firestore 데이터를 Post 객체로 변환
-  factory Post.fromJson(Map<String, dynamic> json) {
+  factory Post.fromJson(Map<String, dynamic> json, String documentId) {
     return Post(
+      documentId: documentId, // Firestore 문서 ID
       id: json['id'] as String,
       title: json['title'] as String,
       content: json['content'] as String,
@@ -54,6 +57,7 @@ class Post {
   // Post 객체를 JSON 형식으로 변환
   Map<String, dynamic> toJson() {
     return {
+      'documentId': documentId,
       'id': id,
       'title': title,
       'content': content,

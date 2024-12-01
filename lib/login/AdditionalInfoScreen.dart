@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -17,6 +18,10 @@ class AdditionalInfoScreen extends StatelessWidget {
       'nickname': nicknameController.text,
       'phone': phoneController.text,
     });
+
+    // FirebaseAuthentication에 회원가입 성공하면 바로 로그인 상태로 변경됨
+    // 로그인 화면으로 돌아가기 위해서 Firebase Authentication에서 로그아웃
+    await FirebaseAuth.instance.signOut();
   }
 
   @override
@@ -43,7 +48,7 @@ class AdditionalInfoScreen extends StatelessWidget {
             ElevatedButton(
               onPressed: () async {
                 await saveAdditionalInfo();
-                Navigator.pop(context); // 저장 후 로그인 화면으로 돌아가기
+                Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
               },
               child: Text('Save'),
             ),

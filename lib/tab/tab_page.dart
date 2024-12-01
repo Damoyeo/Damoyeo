@@ -1,13 +1,11 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:gomoph/tab/favorite/favorite_page.dart';
 import 'package:gomoph/tab/myActivity/MyActivity_page.dart';
 import 'package:gomoph/tab/postList/postList_page.dart';
-import 'package:gomoph/tab/search/search_page.dart';
 
 import 'account/account_page.dart';
-import 'home/home_page.dart';
 import 'chat/chat_page.dart';
-
 
 class TabPage extends StatefulWidget {
   const TabPage({super.key});
@@ -17,25 +15,40 @@ class TabPage extends StatefulWidget {
 }
 
 class _TabPageState extends State<TabPage> {
-  int _currentIndex = 2; //게시물리스트페이지가 가장먼제 나타나게
+  int _currentIndex = 2; // 게시물 리스트 페이지가 가장 먼저 나타나게
 
-  //채팅 페이지 추가필요
-  final _pages = [
-    const FavoritePage(),
-    const ChatPage(),
-    const PostListPage(),
-    const MyActivityPage(),
-    const AccountPage(),
-  ];
+  // 현재 사용자 ID를 가져오는 메서드
+  String? _getCurrentUserId() {
+    final user = FirebaseAuth.instance.currentUser;
+    return user?.uid;
+  }
 
   @override
   Widget build(BuildContext context) {
+    final String? currentUserId = _getCurrentUserId();
+
+    // 현재 사용자 ID가 null인 경우 처리 (로그아웃 상태 처리)
+    if (currentUserId == null) {
+      return const Center(
+        child: Text('로그인되지 않았습니다.'),
+      );
+    }
+
+    // 각 페이지에 현재 사용자 ID를 전달
+    final _pages = [
+      const FavoritePage(),
+      const ChatPage(),
+      PostListPage(),
+      const MyActivityPage(),
+      AccountPage(userId: currentUserId), // 사용자 ID 전달
+    ];
+
     return Scaffold(
       body: _pages[_currentIndex],
       bottomNavigationBar: BottomNavigationBar(
-        type: BottomNavigationBarType.fixed, //네비게이션바를 5개 이상 띄우기위해 필요
-        currentIndex: _currentIndex,  // 현재 인덱스를 지정하여 활성화 상태를 표시
-        onTap: (index) {  // 클릭했을 때 해당 인덱스로 값이 변하면서 탭이 넘어감
+        type: BottomNavigationBarType.fixed, // 네비게이션 바를 5개 이상 띄우기 위해 필요
+        currentIndex: _currentIndex, // 현재 인덱스를 지정하여 활성화 상태를 표시
+        onTap: (index) { // 클릭했을 때 해당 인덱스로 값이 변하면서 탭이 넘어감
           setState(() {
             _currentIndex = index;
           });
