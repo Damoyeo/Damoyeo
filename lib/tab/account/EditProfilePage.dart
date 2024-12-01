@@ -43,8 +43,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final doc = await FirebaseFirestore.instance.collection('users').doc(user.uid).get();
       if (doc.exists) {
         final data = doc.data();
-        _nicknameController.text = data?['nickname'] ?? '';
-        _phoneNumController.text = data?['phone'] ?? '';
+        _nicknameController.text = data?['user_nickname'] ?? '';
+        _phoneNumController.text = data?['user_phoneNum'] ?? '';
 
         // 프로필 이미지 URL 설정
         setState(() {
@@ -80,8 +80,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       // Firestore에 nickname, phone, profile_image 업데이트
       final updateData = {
-        'nickname': _nicknameController.text, // 닉네임 업데이트
-        'phone': _phoneNumController.text,   // 전화번호 업데이트
+        'user_nickname': _nicknameController.text, // 닉네임 업데이트
+        'user_phoneNum': _phoneNumController.text,   // 전화번호 업데이트
       };
 
       // 이미지가 선택된 경우에만 profile_image 추가

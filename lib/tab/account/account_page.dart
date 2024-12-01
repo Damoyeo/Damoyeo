@@ -3,6 +3,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 import 'EditProfilePage.dart';
+import 'EditPassword_page.dart';
+import '../myActivity/MyActivity_page.dart';
 
 class AccountPage extends StatefulWidget {
   final String userId; // 전달받은 유저 ID
@@ -37,8 +39,8 @@ class _AccountPageState extends State<AccountPage> {
         final data = doc.data();
         setState(() {
           _profileImageUrl = data?['profile_image'];
-          _nickname = data?['nickname'];
-          _posts = data?['posts'] ?? 0;
+          _nickname = data?['user_nickname'];
+          _posts = data?['post_Count'] ?? 0;
           _followers = data?['followers'] ?? 0;
           _following = data?['following'] ?? 0;
         });
@@ -86,7 +88,7 @@ class _AccountPageState extends State<AccountPage> {
                           child: CircleAvatar(
                             backgroundImage: _profileImageUrl != null
                                 ? NetworkImage(_profileImageUrl!)
-                                : const AssetImage('assets/default_profile.png') as ImageProvider,
+                                : const AssetImage('assets/default_profile.jpg') as ImageProvider,
                             backgroundColor: Colors.grey,
                           ),
                         ),
@@ -105,7 +107,7 @@ class _AccountPageState extends State<AccountPage> {
                 Column(
                   children: [
                     Text(
-                      '$_posts',
+                      '$_posts', // users 컬렉션에서 가져온 post_Count 값 표시
                       style: const TextStyle(fontSize: 18),
                     ),
                     const Text(
@@ -162,17 +164,25 @@ class _AccountPageState extends State<AccountPage> {
                       },
                     ),
                   if (isCurrentUser) // 본인 프로필일 때만 보이도록 조건 추가
-                    const ListTile(
-                      title: Text('비밀번호 변경'),
-                      trailing: Icon(Icons.chevron_right),
+                    ListTile(
+                      title: const Text('비밀번호 변경'),
+                      trailing: const Icon(Icons.chevron_right),
+                      onTap: () async {
+                        final result = await Navigator.of(context).push(
+                          MaterialPageRoute(builder: (
+                              context) => const EditPasswordPage()),
+                        );
+                      },
                     ),
-                  const ListTile(
-                    title: Text('활동 내역'),
-                    trailing: Icon(Icons.chevron_right),
-                  ),
-                  const ListTile(
-                    title: Text('작성글 내역'),
-                    trailing: Icon(Icons.chevron_right),
+                  ListTile(
+                    title: const Text('활동 내역'),
+                    trailing: const Icon(Icons.chevron_right),
+                    onTap: () async {
+                      final result = await Navigator.of(context).push(
+                        MaterialPageRoute(builder: (
+                            context) => const MyActivityPage()),
+                      );
+                    },
                   ),
                 ],
               ),
