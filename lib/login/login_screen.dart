@@ -78,8 +78,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   width: 80,
                   height: 80,
                   child: CircleAvatar(
-                    backgroundImage: NetworkImage(
-                        'https://image.ajunews.com/content/image/2018/08/20/20180820161422688695.jpg'),
+                    backgroundImage: const AssetImage('assets/default_profile.jpg') as ImageProvider,
+                    backgroundColor: Colors.grey,
                   ),
                 ),
                 // 이메일 입력 필드
