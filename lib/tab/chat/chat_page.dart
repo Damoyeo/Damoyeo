@@ -193,6 +193,11 @@ class ChatPage extends StatelessWidget {
 
           final chats = snapshot.data!.docs; // 채팅방 목록
 
+          // 채팅방이 존재하지 않을때 Center에 메세지 출력
+          if(chats.isEmpty){
+            return const Center(child: Text("다른 사람과 대화를 시작해보세요!"));
+          }
+
           // 채팅방 목록을 pinned 속성에 따라 정렬
           chats.sort((a, b) {
             bool aPinned = a['pinned'] ?? false;
