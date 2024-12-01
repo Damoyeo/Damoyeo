@@ -60,77 +60,77 @@ class ChatPage extends StatelessWidget {
     return chatRoomId; // 새 채팅방 ID 반환
   }
 
-  // showUserListDialog: 사용자 목록을 표시하여 채팅을 시작할 사용자를 선택하는 대화상자를 띄우는 함수
-  Future<void> showUserListDialog(BuildContext context) async {
-    final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-    final currentUser = FirebaseAuth.instance.currentUser; // 현재 로그인한 사용자
-
-    if (currentUser == null) return; // 로그인된 사용자가 없으면 함수 종료
-
-    // 사용자 목록을 표시하는 대화상자 생성
-    showDialog(
-      context: context,
-      builder: (context) {
-        return Dialog(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Padding(
-                padding: EdgeInsets.all(16.0),
-                child: Text(
-                  "Select a user to chat with",
-                  style: TextStyle(fontSize: 18), // 제목 텍스트 스타일
-                ),
-              ),
-              // Firestore에서 사용자 목록을 실시간 스트림으로 가져옴
-              StreamBuilder<QuerySnapshot>(
-                stream: _firestore.collection('users').snapshots(),
-                builder: (context, snapshot) {
-                  if (!snapshot.hasData) {
-                    return const Center(child: CircularProgressIndicator()); // 데이터 로딩 중 표시
-                  }
-
-                  // 현재 사용자를 제외한 사용자 목록 필터링
-                  final users = snapshot.data!.docs.where((user) => user.id != currentUser.uid);
-
-                  // 사용자 목록을 표시하는 ListView
-                  return ListView.builder(
-                    shrinkWrap: true,
-                    itemCount: users.length,
-                    itemBuilder: (context, index) {
-                      final userDoc = users.elementAt(index); // 사용자 문서
-                      final userId = userDoc.id; // 사용자 ID
-                      final userName = userDoc['name'] ?? 'Unknown'; // 사용자 이름 (없으면 Unknown 표시)
-
-                      return ListTile(
-                        title: Text(userName), // 사용자 이름 표시
-                        onTap: () async {
-                          Navigator.pop(context); // 대화상자 닫기
-                          final chatRoomId = await createOrGetChatRoom(userId); // 채팅방 생성 또는 가져오기
-                          if (chatRoomId != null) {
-                            // 채팅방으로 이동
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ChatDetailPage(
-                                  chatId: chatRoomId,
-                                  otherUserId: userId,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
-            ],
-          ),
-        );
-      },
-    );
-  }
+  // // showUserListDialog: 사용자 목록을 표시하여 채팅을 시작할 사용자를 선택하는 대화상자를 띄우는 함수
+  // Future<void> showUserListDialog(BuildContext context) async {
+  //   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  //   final currentUser = FirebaseAuth.instance.currentUser; // 현재 로그인한 사용자
+  //
+  //   if (currentUser == null) return; // 로그인된 사용자가 없으면 함수 종료
+  //
+  //   // 사용자 목록을 표시하는 대화상자 생성
+  //   showDialog(
+  //     context: context,
+  //     builder: (context) {
+  //       return Dialog(
+  //         child: Column(
+  //           mainAxisSize: MainAxisSize.min,
+  //           children: [
+  //             const Padding(
+  //               padding: EdgeInsets.all(16.0),
+  //               child: Text(
+  //                 "Select a user to chat with",
+  //                 style: TextStyle(fontSize: 18), // 제목 텍스트 스타일
+  //               ),
+  //             ),
+  //             // Firestore에서 사용자 목록을 실시간 스트림으로 가져옴
+  //             StreamBuilder<QuerySnapshot>(
+  //               stream: _firestore.collection('users').snapshots(),
+  //               builder: (context, snapshot) {
+  //                 if (!snapshot.hasData) {
+  //                   return const Center(child: CircularProgressIndicator()); // 데이터 로딩 중 표시
+  //                 }
+  //
+  //                 // 현재 사용자를 제외한 사용자 목록 필터링
+  //                 final users = snapshot.data!.docs.where((user) => user.id != currentUser.uid);
+  //
+  //                 // 사용자 목록을 표시하는 ListView
+  //                 return ListView.builder(
+  //                   shrinkWrap: true,
+  //                   itemCount: users.length,
+  //                   itemBuilder: (context, index) {
+  //                     final userDoc = users.elementAt(index); // 사용자 문서
+  //                     final userId = userDoc.id; // 사용자 ID
+  //                     final userName = userDoc['name'] ?? 'Unknown'; // 사용자 이름 (없으면 Unknown 표시)
+  //
+  //                     return ListTile(
+  //                       title: Text(userName), // 사용자 이름 표시
+  //                       onTap: () async {
+  //                         Navigator.pop(context); // 대화상자 닫기
+  //                         final chatRoomId = await createOrGetChatRoom(userId); // 채팅방 생성 또는 가져오기
+  //                         if (chatRoomId != null) {
+  //                           // 채팅방으로 이동
+  //                           Navigator.push(
+  //                             context,
+  //                             MaterialPageRoute(
+  //                               builder: (context) => ChatDetailPage(
+  //                                 chatId: chatRoomId,
+  //                                 otherUserId: userId,
+  //                               ),
+  //                             ),
+  //                           );
+  //                         }
+  //                       },
+  //                     );
+  //                   },
+  //                 );
+  //               },
+  //             ),
+  //           ],
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
   // pinChatRoom: 특정 채팅방을 상단 고정하는 함수
   Future<void> pinChatRoom(String chatRoomId) async {
@@ -279,10 +279,11 @@ class ChatPage extends StatelessWidget {
           );
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showUserListDialog(context), // 사용자 목록 표시 대화상자
-        child: const Icon(Icons.chat), // 채팅 아이콘
-      ),
+      // floatingActionButton: FloatingActionButton(
+      //   // onPressed: () => showUserListDialog(context), // 사용자 목록 표시 대화상자
+      //   onPressed: () {},
+      //   child: const Icon(Icons.chat), // 채팅 아이콘
+      // ),
     );
   }
 }
