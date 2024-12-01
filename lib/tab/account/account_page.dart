@@ -38,7 +38,7 @@ class _AccountPageState extends State<AccountPage> {
         final data = doc.data();
         setState(() {
           _profileImageUrl = data?['profile_image'];
-          _nickname = data?['nickname'];
+          _nickname = data?['user_nickname'];
           _posts = data?['post_Count'] ?? 0;
           _followers = data?['followers'] ?? 0;
           _following = data?['following'] ?? 0;
