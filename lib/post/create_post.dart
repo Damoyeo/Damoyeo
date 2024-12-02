@@ -29,6 +29,9 @@ class _CreatePostState extends State<CreatePost> {
   late TextEditingController _contentTextController;
   late TextEditingController _recruitTextController;
 
+  // 숫자 포맷 설정 수정시 불러온값 확인할때 숫자로만뜨는것을 해결하기위해
+  final formatter = NumberFormat.currency(locale: "ko_KR", symbol: "₩");
+
   @override
   void initState() {
     super.initState();
@@ -40,7 +43,7 @@ class _CreatePostState extends State<CreatePost> {
       _addressTextController = TextEditingController(text: post.address);
       _detailAddressTextController =
           TextEditingController(text: post.detailAddress);
-      _costTextController = TextEditingController(text: post.cost.toString());
+      _costTextController = TextEditingController(text: formatter.format(int.parse(post.cost.toString())));
       _contentTextController = TextEditingController(text: post.content);
       _recruitTextController =
           TextEditingController(text: post.recruit.toString());
@@ -442,7 +445,25 @@ class _CreatePostState extends State<CreatePost> {
                     false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
               ),
               hint: Text('지역을 선택해주세요.'),
-              items: ['서울특별시', '부산광역시', '대구광역시']
+              items: [
+                "서울특별시",
+                "부산광역시",
+                "대구광역시",
+                "인천광역시",
+                "광주광역시",
+                "대전광역시",
+                "울산광역시",
+                "세종특별자치시",
+                "경기도",
+                "강원도",
+                "충청북도",
+                "충청남도",
+                "전라북도",
+                "전라남도",
+                "경상북도",
+                "경상남도",
+                "제주특별자치도"
+              ]
                   .map((String value) => DropdownMenuItem(
                         value: value,
                         child: Text(value),
@@ -454,6 +475,7 @@ class _CreatePostState extends State<CreatePost> {
                   _isLocalSelectedValid = true; // 선택된 값 업데이트
                 });
               },
+              menuMaxHeight: 250, // 드롭다운의 최대 높이 제한
             ),
             buildErrorIndicator(_isLocalSelectedValid, "지역을 선택해주세요."),
             SizedBox(height: 16),
@@ -671,7 +693,7 @@ class _CreatePostState extends State<CreatePost> {
                         xfileImages.add(image); // XFile 값 추가
                       }
                     }
-                    _validateFields();  //상태 업데이트
+                    _validateFields(); //상태 업데이트
                     // 작성 완료 기능 추가
                     if (_isLocalSelectedValid &&
                         _isTitleValid &&
@@ -718,7 +740,7 @@ class _CreatePostState extends State<CreatePost> {
                                 _contentTextController.text,
                                 _localSelectedValue!,
                                 int.parse(_recruitTextController.text),
-                                 convertXFilesToFiles(xfileImages),
+                                convertXFilesToFiles(xfileImages),
                                 stringImages,
                                 _addressTextController.text,
                                 _detailAddressTextController.text,
