@@ -342,7 +342,7 @@ class _PostDetailState extends State<PostDetail> {
                         trailing: IconButton(
                           icon: Icon(Icons.send, color: Colors.blue),
                           onPressed: () async {
-                            Navigator.pop(context);
+                            // Navigator.pop(context);
                             // 채팅방 ID를 가져오거나
                             final chatPage = ChatPage(); // ChatPage 인스턴스 생성
                             final chatRoomId = await chatPage
