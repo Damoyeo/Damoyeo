@@ -631,33 +631,6 @@ class _CreatePostState extends State<CreatePost> {
             ),
             buildErrorIndicator(_isCostValid, "활동금액을 입력해주세요."),
             SizedBox(height: 16),
-            Text('불참 횟수 제한',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _limitSelectedValue,
-              decoration: InputDecoration(
-                enabledBorder:
-                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
-                focusedBorder:
-                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
-                errorBorder: customInputBorder(
-                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
-              ),
-              hint: Text('불참 횟수를 선택해주세요.'),
-              items: ['1회', '2회', '3회', '무제한']
-                  .map((String value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(value),
-                      ))
-                  .toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _limitSelectedValue = newValue; // 선택된 값 업데이트
-                });
-              },
-            ),
-            SizedBox(height: 16),
             Text('모집글 내용',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
