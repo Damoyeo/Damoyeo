@@ -323,7 +323,7 @@ class _PostDetailState extends State<PostDetail> {
                     itemBuilder: (context, index) {
                       final proposer = proposersData[index];
                       final profileImage = proposer['profileImage']!;
-                      final nickname = proposer['user_nickname']!;
+                      final nickname = proposer['nickname']!;
                       final userId = proposer['user_id']!;
 
                       return ListTile(
