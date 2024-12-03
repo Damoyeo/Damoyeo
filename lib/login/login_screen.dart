@@ -44,6 +44,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'user_phoneNum': phoneController.text.trim(),
           'user_email': emailController.text.trim(),
           'user_createdAt': FieldValue.serverTimestamp(),
+          'user_postCount': 0,
         });
       }
 

@@ -237,7 +237,7 @@ class ChatPage extends StatelessWidget {
                     );
                   }
 
-                  final otherUserName = userSnapshot.data!['user_name'];
+                  final otherUserName = userSnapshot.data!['name'];
                   final profileImageUrl = userSnapshot.data!['profile_image'];
 
                   return ListTile(

@@ -448,30 +448,21 @@ class _PostDetailState extends State<PostDetail> {
                                         },
                                       ),
                                       ListTile(
-                                        title: Text('삭제',
-                                            style: TextStyle(fontSize: 18)),
+                                        title: Text('삭제', style: TextStyle(fontSize: 18)),
                                         onTap: () async {
-                                          final shouldDelete =
-                                              await showDialog<bool>(
+                                          final shouldDelete = await showDialog<bool>(
                                             context: context,
                                             builder: (context) {
                                               return AlertDialog(
                                                 title: Text('삭제 확인'),
-                                                content:
-                                                    Text('이 게시물을 삭제하시겠습니까?'),
+                                                content: Text('이 게시물을 삭제하시겠습니까?'),
                                                 actions: [
                                                   TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(
-                                                            context, false),
-                                                    // 취소
+                                                    onPressed: () => Navigator.pop(context, false), // 취소
                                                     child: Text('취소'),
                                                   ),
                                                   TextButton(
-                                                    onPressed: () =>
-                                                        Navigator.pop(
-                                                            context, true),
-                                                    // 확인
+                                                    onPressed: () => Navigator.pop(context, true), // 확인
                                                     child: Text('삭제'),
                                                   ),
                                                 ],
@@ -484,36 +475,38 @@ class _PostDetailState extends State<PostDetail> {
                                               // Firestore 문서 삭제
                                               await FirebaseFirestore.instance
                                                   .collection('posts')
-                                                  .doc(widget.post
-                                                      .documentId) // Firestore 문서 ID
+                                                  .doc(widget.post.documentId) // Firestore 문서 ID
                                                   .delete();
 
+                                              // user_postCount 감소 처리
+                                              final userId = FirebaseAuth.instance.currentUser?.uid;
+                                              if (userId != null) {
+                                                final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
+                                                final userSnapshot = await userDoc.get();
+
+                                                if (userSnapshot.exists) {
+                                                  final currentPostCount = userSnapshot['user_PostCount'] ?? 0;
+                                                  if (currentPostCount > 0) {
+                                                    await userDoc.update({'user_PostCount': currentPostCount - 1});
+                                                  }
+                                                }
+                                              }
+
                                               // 삭제 성공 메시지
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                    content:
-                                                        Text('게시물이 삭제되었습니다.')),
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('게시물이 삭제되었습니다.')),
                                               );
 
                                               // TabPage로 이동
-                                              //Navigator.pushAndRemoveUntil(
                                               Navigator.pushAndRemoveUntil(
                                                 context,
-                                                MaterialPageRoute(
-                                                    builder: (context) =>
-                                                        const TabPage()),
-                                                // TabPage로 이동
-                                                (Route<dynamic> route) =>
-                                                    false, // 모든 이전 화면 제거
+                                                MaterialPageRoute(builder: (context) => const TabPage()), // TabPage로 이동
+                                                    (Route<dynamic> route) => false, // 모든 이전 화면 제거
                                               );
                                             } catch (e) {
                                               // 에러 처리
-                                              ScaffoldMessenger.of(context)
-                                                  .showSnackBar(
-                                                SnackBar(
-                                                    content: Text(
-                                                        '게시물 삭제 중 오류가 발생했습니다: $e')),
+                                              ScaffoldMessenger.of(context).showSnackBar(
+                                                SnackBar(content: Text('게시물 삭제 중 오류가 발생했습니다: $e')),
                                               );
                                             }
                                           }
