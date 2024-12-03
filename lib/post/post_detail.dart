@@ -49,7 +49,7 @@ class _PostDetailState extends State<PostDetail> {
       if (userDoc.exists) {
         setState(() {
           profileImageUrl = userDoc.data()?['profile_image']; // 프로필 이미지 URL
-          nickname = userDoc.data()?['nickname']; // 닉네임
+          nickname = userDoc.data()?['user_nickname']; // 닉네임
         });
       }
     } catch (e) {
@@ -278,7 +278,7 @@ class _PostDetailState extends State<PostDetail> {
           proposersData.add({
             'user_id': userId, // user_id 추가
             'profileImage': userDoc.data()?['profile_image'] ?? '',
-            'nickname': userDoc.data()?['nickname'] ?? '닉네임 없음',
+            'nickname': userDoc.data()?['user_nickname'] ?? '닉네임 없음',
           });
         }
       }
@@ -322,7 +322,7 @@ class _PostDetailState extends State<PostDetail> {
                     itemBuilder: (context, index) {
                       final proposer = proposersData[index];
                       final profileImage = proposer['profileImage']!;
-                      final nickname = proposer['nickname']!;
+                      final nickname = proposer['user_nickname']!;
                       final userId = proposer['user_id']!;
 
                       return ListTile(
