@@ -327,12 +327,23 @@ class _PostDetailState extends State<PostDetail> {
                       final userId = proposer['user_id']!;
 
                       return ListTile(
-                        leading: CircleAvatar(
-                          radius: 24,
-                          backgroundImage: CachedNetworkImageProvider(
-                            profileImage.isNotEmpty
-                                ? profileImage
-                                : 'assets/default_profile.png',
+                        leading: GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => AccountPage(
+                                    userId: userId), // AccountPage로 이동
+                              ),
+                            );
+                          },
+                          child: CircleAvatar(
+                            radius: 24,
+                            backgroundImage: CachedNetworkImageProvider(
+                              profileImage.isNotEmpty
+                                  ? profileImage
+                                  : 'assets/default_profile.png',
+                            ),
                           ),
                         ),
                         title: Text(
