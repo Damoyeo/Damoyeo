@@ -37,9 +37,9 @@ class _ChatDetailPageState extends State<ChatDetailPage> {
     final userDoc = await _firestore.collection('users').doc(widget.otherUserId).get();
     if (userDoc.exists) {
       setState(() {
-        otherUserName = userDoc['nickname'] ?? 'Unknown';
+        otherUserName = userDoc['user_nickname'] ?? 'Unknown';
         otherUserProfileImage = userDoc['profile_image'];
-        otherName = userDoc['name'] ?? 'Unknown';
+        otherName = userDoc['user_name'] ?? 'Unknown';
       });
     }
   }
