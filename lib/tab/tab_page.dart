@@ -39,7 +39,7 @@ class _TabPageState extends State<TabPage> {
       const FavoritePage(),
       const ChatPage(),
       PostListPage(),
-      const MyActivityPage(),
+      MyActivityPage(userId: currentUserId),
       AccountPage(userId: currentUserId), // 사용자 ID 전달
     ];
 

@@ -22,11 +22,13 @@ class _AccountPageState extends State<AccountPage> {
   int _posts = 0; // 게시물 수
   int _followers = 0; // 팔로워 수
   int _following = 0; // 팔로잉 수
+  late String userId;
 
   @override
   void initState() {
     super.initState();
     _currentUserId = FirebaseAuth.instance.currentUser?.uid; // 현재 로그인한 사용자 ID 가져오기
+    userId = widget.userId;
     _loadUserProfileData();
   }
 
@@ -180,7 +182,7 @@ class _AccountPageState extends State<AccountPage> {
                     onTap: () async {
                       final result = await Navigator.of(context).push(
                         MaterialPageRoute(builder: (
-                            context) => const MyActivityPage()),
+                            context) => MyActivityPage(userId: userId,)),
                       );
                     },
                   ),
