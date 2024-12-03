@@ -281,8 +281,8 @@ class _PostListPageState extends State<PostListPage> {
                 margin: EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
                 child: ListTile(
                   leading: Container(
-                    width: 50.0,
-                    height: 50.0,
+                    width: 90.0,
+                    height: 250.0,
                     color: Colors.grey[300],
                     child: post.imageUrls.isNotEmpty
                         ? Image.network(
@@ -316,6 +316,12 @@ class _PostListPageState extends State<PostListPage> {
                     builder: (context, snapshot) {
                       bool isLiked = snapshot.data ?? false;
                       return IconButton(
+                        iconSize: 20.0, // 아이콘 크기를 줄임
+                        padding: EdgeInsets.zero, // 패딩 제거
+                        constraints: BoxConstraints(
+                          minWidth: 24, // 최소 너비
+                          minHeight: 24, // 최소 높이
+                        ),
                         icon: Icon(
                           isLiked ? Icons.favorite : Icons.favorite_border,
                           color: isLiked ? Colors.red : null,
