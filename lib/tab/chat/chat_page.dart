@@ -15,7 +15,9 @@ class ChatPage extends StatelessWidget {
         // user_name필드가 없다면 name필드로 대체
         'name': userDoc['user_name'] ?? userDoc['name'] ?? 'Unknown',
         //만약 프로필 사진이 없다면 기본 이미지로 대체
-        'profile_image': userDoc['profile_image'] ?? 'https://firebasestorage.googleapis.com/v0/b/test-project-a18d0.firebasestorage.app/o/profile_images%2FId9aYrIBRqf5kB2hb2fU8QU7mFV2.jpg?alt=media&token=c1624867-0b33-4e56-8c8b-4be3c2b9a569',
+        'profile_image': (userDoc['profile_image'] != null && userDoc['profile_image'].isNotEmpty)
+            ? userDoc['profile_image']
+            : 'https://firebasestorage.googleapis.com/v0/b/test-project-a18d0.firebasestorage.app/o/profile_images%2FId9aYrIBRqf5kB2hb2fU8QU7mFV2.jpg?alt=media&token=c1624867-0b33-4e56-8c8b-4be3c2b9a569',
       };
     }
     return {'name': 'Unknown', 'profile_image': ''};
@@ -237,7 +239,7 @@ class ChatPage extends StatelessWidget {
                     );
                   }
 
-                  final otherUserName = userSnapshot.data!['user_name'];
+                  final otherUserName = userSnapshot.data!['name'];
                   final profileImageUrl = userSnapshot.data!['profile_image'];
 
                   return ListTile(
