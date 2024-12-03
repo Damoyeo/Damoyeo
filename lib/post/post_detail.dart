@@ -23,6 +23,7 @@ class PostDetail extends StatefulWidget {
 }
 
 class _PostDetailState extends State<PostDetail> {
+  final formatter = NumberFormat.currency(locale: "ko_KR", symbol: "");
   //각 프로필 이미지 작성자의 닉네임 추가
   //이종범 코드 추가부분
   String? profileImageUrl; // 작성자의 프로필 이미지 URL
@@ -292,7 +293,7 @@ class _PostDetailState extends State<PostDetail> {
 /////////////////////////////////////////////////////////////////////모달
   Future<void> _showProposersModal(BuildContext context) async {
     final List<Map<String, String>> proposersData =
-    await fetchProposersData(widget.post.documentId);
+        await fetchProposersData(widget.post.documentId);
 
     await showModalBottomSheet(
       context: context,
@@ -345,8 +346,8 @@ class _PostDetailState extends State<PostDetail> {
                             // Navigator.pop(context);
                             // 채팅방 ID를 가져오거나
                             final chatPage = ChatPage(); // ChatPage 인스턴스 생성
-                            final chatRoomId = await chatPage
-                                .createOrGetChatRoom(userId);
+                            final chatRoomId =
+                                await chatPage.createOrGetChatRoom(userId);
 
                             // 채팅방이 정상적으로 생성되거나 가져왔을 경우에만 이동
                             if (chatRoomId != null) {
@@ -373,7 +374,6 @@ class _PostDetailState extends State<PostDetail> {
       },
     );
   }
-
 
   //////////////////////////////////////////////////////////////////모달
 
@@ -697,6 +697,14 @@ class _PostDetailState extends State<PostDetail> {
                         ),
                       ),
                       SizedBox(height: 16),
+                      Text(
+                        '참여 금액  ${formatter.format(int.parse(widget.post.cost.toString()))}원',
+                        style: TextStyle(
+                            fontSize: 16,
+                            height: 1.5,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      SizedBox(height: 16),
                     ],
                   ),
                 ),
@@ -715,9 +723,10 @@ class _PostDetailState extends State<PostDetail> {
                       final isProposers = snapshot.data ?? false;
                       final bool isRecruitAvailable =
                           widget.post.recruit > _proposersCount;
-                      if(currentUserId == widget.post.id){  //작성자일때
+                      if (currentUserId == widget.post.id) {
+                        //작성자일때
                         return ElevatedButton(
-                          onPressed:() async {
+                          onPressed: () async {
                             await _showProposersModal(context);
                           },
                           style: ElevatedButton.styleFrom(
@@ -727,41 +736,45 @@ class _PostDetailState extends State<PostDetail> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: Text('참여인원 확인 ${_proposersCount}/${widget.post.recruit}', //
+                          child: Text(
+                            '참여인원 확인 ${_proposersCount}/${widget.post.recruit}',
+                            //
                             style: TextStyle(fontSize: 16, color: Colors.white),
                           ),
                         );
-                      } else{  //작성자가 아닐때
+                      } else {
+                        //작성자가 아닐때
                         return ElevatedButton(
-                        onPressed: (!isProposers && !isRecruitAvailable)
-                            ? null
-                            : () async {
-                                // 신청 상태가 아니라면 참여하기 버튼 클릭 처리
-                                await _toggleProposers(widget.post.documentId,
-                                    currentUserId!); // 신청 상태 변경
-                                print('참여하기 버튼 클릭');
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: isProposers
-                              ? Colors.grey
-                              : isRecruitAvailable
-                                  ? Colors.blue
-                                  : Colors.grey,
-                          padding: EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          onPressed: (!isProposers && !isRecruitAvailable)
+                              ? null
+                              : () async {
+                                  // 신청 상태가 아니라면 참여하기 버튼 클릭 처리
+                                  await _toggleProposers(widget.post.documentId,
+                                      currentUserId!); // 신청 상태 변경
+                                  print('참여하기 버튼 클릭');
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isProposers
+                                ? Colors.grey
+                                : isRecruitAvailable
+                                    ? Colors.blue
+                                    : Colors.grey,
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
                           ),
-                        ),
-                        child: Text(
-                          isProposers
-                              ? '취소하기 ${_proposersCount}/${widget.post.recruit}' // 좋아요 상태일 때 표시
-                              : isRecruitAvailable
-                                  ? '참여하기 ${_proposersCount}/${widget.post.recruit}'
-                                  : '모집마감${_proposersCount}/${widget.post.recruit}',
-                          // 좋아요 상태가 아닐 때 표시
-                          style: TextStyle(fontSize: 16, color: Colors.white),
-                        ),
-                      );}
+                          child: Text(
+                            isProposers
+                                ? '취소하기 ${_proposersCount}/${widget.post.recruit}' // 좋아요 상태일 때 표시
+                                : isRecruitAvailable
+                                    ? '참여하기 ${_proposersCount}/${widget.post.recruit}'
+                                    : '모집마감${_proposersCount}/${widget.post.recruit}',
+                            // 좋아요 상태가 아닐 때 표시
+                            style: TextStyle(fontSize: 16, color: Colors.white),
+                          ),
+                        );
+                      }
                     },
                   ),
                 ),
