@@ -2,7 +2,6 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import '../login/login_screen.dart'; // flutter_login으로 구성된 로그인 화면
 import '../tab/tab_page.dart';
-import '../login/login_screen.dart';
 
 class AuthGate extends StatelessWidget {
   const AuthGate({Key? key}) : super(key: key);

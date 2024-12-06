@@ -50,12 +50,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       // 인증 성공 시 다음 화면으로 이동하거나 처리 추가
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isLoginMode ? 'Logged in successfully' : 'Sign-up successful')),
+        SnackBar(content: Text(isLoginMode ? '로그인 성공' : '회원가입 성공')),
       );
     } catch (error) {
       // 오류 발생 시 처리
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('An error occurred: $error')),
+        SnackBar(content: Text('오류가 발생했습니다: $error')),
       );
     }
   }
@@ -102,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return '비밀번호는 최소 6자 이상이어야 합니다.';
                     }
                     return null;
                   },
