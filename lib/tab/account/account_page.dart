@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import 'EditProfilePage.dart';
 import 'EditPassword_page.dart';
+import '../../login/login_screen.dart';
 import '../myActivity/MyActivity_page.dart';
 
 class AccountPage extends StatefulWidget {
@@ -53,8 +54,10 @@ class _AccountPageState extends State<AccountPage> {
   }
 
   Future<void> _logout(BuildContext context) async {
-    await FirebaseAuth.instance.signOut(); // 로그아웃 수행
-    Navigator.of(context).pushReplacementNamed('/login'); // 로그인 페이지로 이동
+    await FirebaseAuth.instance.signOut();
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (context) => LoginScreen()),
+    );
   }
 
   @override
