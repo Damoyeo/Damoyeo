@@ -5,7 +5,9 @@ import '../../models/post.dart';
 import '../../post/post_detail.dart';
 
 class MyActivityPage extends StatefulWidget {
-  const MyActivityPage({Key? key}) : super(key: key);
+  final String userId;
+
+  const MyActivityPage({Key? key, required this.userId}) : super(key: key);
 
   @override
   _MyActivityPageState createState() => _MyActivityPageState();
@@ -14,12 +16,14 @@ class MyActivityPage extends StatefulWidget {
 class _MyActivityPageState extends State<MyActivityPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
-  final userId = FirebaseAuth.instance.currentUser?.uid;
+  // final userId = FirebaseAuth.instance.currentUser?.uid;
+  late String userId;
 
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
+    userId = widget.userId;
   }
 
   Stream<List<Post>> getMyPostsStream() {

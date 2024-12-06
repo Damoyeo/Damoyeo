@@ -22,11 +22,13 @@ class _AccountPageState extends State<AccountPage> {
   int _posts = 0; // 게시물 수
   int _followers = 0; // 팔로워 수
   int _following = 0; // 팔로잉 수
+  late String userId;
 
   @override
   void initState() {
     super.initState();
     _currentUserId = FirebaseAuth.instance.currentUser?.uid; // 현재 로그인한 사용자 ID 가져오기
+    userId = widget.userId;
     _loadUserProfileData();
   }
 
@@ -40,7 +42,7 @@ class _AccountPageState extends State<AccountPage> {
         setState(() {
           _profileImageUrl = data?['profile_image'];
           _nickname = data?['user_nickname'];
-          _posts = data?['post_Count'] ?? 0;
+          _posts = data?['user_PostCount'] ?? 0;
           _followers = data?['followers'] ?? 0;
           _following = data?['following'] ?? 0;
         });
@@ -75,68 +77,43 @@ class _AccountPageState extends State<AccountPage> {
         padding: const EdgeInsets.all(16.0),
         child: Column(
           children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Column(
               children: [
-                Column(
-                  children: [
-                    Stack(
-                      children: [
-                        SizedBox(
-                          width: 80,
-                          height: 80,
-                          child: CircleAvatar(
-                            backgroundImage: _profileImageUrl != null
-                                ? NetworkImage(_profileImageUrl!)
-                                : const AssetImage('assets/default_profile.jpg') as ImageProvider,
-                            backgroundColor: Colors.grey,
-                          ),
+                Center(
+                  child: Stack(
+                    children: [
+                      SizedBox(
+                        width: 120, // 프로필 이미지 크기 설정
+                        height: 120,
+                        child: CircleAvatar(
+                          backgroundImage: _profileImageUrl != null
+                              ? NetworkImage(_profileImageUrl!)
+                              : const AssetImage('assets/default_profile.jpg') as ImageProvider,
+                          backgroundColor: Colors.grey,
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      _nickname ?? '닉네임 없음',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
+                const SizedBox(height: 8),
+                Text(
+                  _nickname ?? '닉네임 없음',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 Column(
                   children: [
+                    const SizedBox(height: 4),
                     Text(
-                      '$_posts', // users 컬렉션에서 가져온 post_Count 값 표시
-                      style: const TextStyle(fontSize: 18),
+                      '$_posts',
+                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                     ),
                     const Text(
                       '게시물',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text(
-                      '$_followers',
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                    const Text(
-                      '팔로워',
-                      style: TextStyle(fontSize: 18),
-                    ),
-                  ],
-                ),
-                Column(
-                  children: [
-                    Text(
-                      '$_following',
-                      style: const TextStyle(fontSize: 18),
-                    ),
-                    const Text(
-                      '팔로잉',
-                      style: TextStyle(fontSize: 18),
+                      style: TextStyle(fontSize: 14, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -169,8 +146,7 @@ class _AccountPageState extends State<AccountPage> {
                       trailing: const Icon(Icons.chevron_right),
                       onTap: () async {
                         final result = await Navigator.of(context).push(
-                          MaterialPageRoute(builder: (
-                              context) => const EditPasswordPage()),
+                          MaterialPageRoute(builder: (context) => const EditPasswordPage()),
                         );
                       },
                     ),
@@ -180,7 +156,8 @@ class _AccountPageState extends State<AccountPage> {
                     onTap: () async {
                       final result = await Navigator.of(context).push(
                         MaterialPageRoute(builder: (
-                            context) => const MyActivityPage()),
+                            context) => MyActivityPage(userId: userId,)),
+
                       );
                     },
                   ),

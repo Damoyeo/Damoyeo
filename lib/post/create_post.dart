@@ -1,7 +1,9 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:currency_text_input_formatter/currency_text_input_formatter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:gomoph/models//create_model.dart';
@@ -9,7 +11,6 @@ import 'package:gomoph/models/post.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:kpostal/kpostal.dart';
-
 class CreatePost extends StatefulWidget {
   final Post? post;
 
@@ -630,33 +631,6 @@ class _CreatePostState extends State<CreatePost> {
             ),
             buildErrorIndicator(_isCostValid, "활동금액을 입력해주세요."),
             SizedBox(height: 16),
-            Text('불참 횟수 제한',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-            SizedBox(height: 8),
-            DropdownButtonFormField<String>(
-              value: _limitSelectedValue,
-              decoration: InputDecoration(
-                enabledBorder:
-                    customInputBorder(_isTitleValid, Colors.grey, Colors.red),
-                focusedBorder:
-                    customInputBorder(_isTitleValid, Colors.blue, Colors.red),
-                errorBorder: customInputBorder(
-                    false, Colors.grey, Colors.red), // errorBorder는 항상 빨간색
-              ),
-              hint: Text('불참 횟수를 선택해주세요.'),
-              items: ['1회', '2회', '3회', '무제한']
-                  .map((String value) => DropdownMenuItem(
-                        value: value,
-                        child: Text(value),
-                      ))
-                  .toList(),
-              onChanged: (String? newValue) {
-                setState(() {
-                  _limitSelectedValue = newValue; // 선택된 값 업데이트
-                });
-              },
-            ),
-            SizedBox(height: 16),
             Text('모집글 내용',
                 style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
@@ -718,6 +692,23 @@ class _CreatePostState extends State<CreatePost> {
                       try {
                         // 업로드 처리
                         if (widget.post == null) {
+                          final userId = FirebaseAuth.instance.currentUser?.uid;
+                          if (userId == null) {
+                            throw Exception("사용자가 로그인되어 있지 않습니다.");
+                          }
+
+                          // Firestore에서 user_PostCount 가져오기
+                          final userDoc = FirebaseFirestore.instance.collection('users').doc(userId);
+                          final userSnapshot = await userDoc.get();
+
+                          int currentPostCount = 0;
+                          if (userSnapshot.exists && userSnapshot.data()!.containsKey('user_PostCount')) {
+                            currentPostCount = userSnapshot['user_PostCount'];
+                          }
+
+                          // user_PostCount 값을 1 증가
+                          final updatedPostCount = currentPostCount + 1;
+
                           await model.uploadPost(
                             _titleTextController.text,
                             _contentTextController.text,
@@ -732,21 +723,25 @@ class _CreatePostState extends State<CreatePost> {
                             saveToDatabase(),
                             _selectedDate!,
                           );
+
+                          // Firestore에서 user_PostCount 업데이트
+                          await userDoc.update({'user_PostCount': updatedPostCount});
                         } else {
                           if (widget.post != null) {
                             await model.updatePost(
-                                widget.post!.documentId,
-                                _titleTextController.text,
-                                _contentTextController.text,
-                                _localSelectedValue!,
-                                int.parse(_recruitTextController.text),
-                                convertXFilesToFiles(xfileImages),
-                                stringImages,
-                                _addressTextController.text,
-                                _detailAddressTextController.text,
-                                categories[_selectedCategoryIndex!],
-                                saveToDatabase(),
-                                _selectedDate!);
+                              widget.post!.documentId,
+                              _titleTextController.text,
+                              _contentTextController.text,
+                              _localSelectedValue!,
+                              int.parse(_recruitTextController.text),
+                              convertXFilesToFiles(xfileImages),
+                              stringImages,
+                              _addressTextController.text,
+                              _detailAddressTextController.text,
+                              categories[_selectedCategoryIndex!],
+                              saveToDatabase(),
+                              _selectedDate!,
+                            );
                           }
                         }
 
