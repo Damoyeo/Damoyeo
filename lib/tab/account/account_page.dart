@@ -4,8 +4,8 @@ import 'package:flutter/material.dart';
 
 import 'EditProfilePage.dart';
 import 'EditPassword_page.dart';
-import '../../login/login_screen.dart';
 import '../myActivity/MyActivity_page.dart';
+import '../../auth/auth_gate.dart';
 
 class AccountPage extends StatefulWidget {
   final String userId; // 전달받은 유저 ID
@@ -55,9 +55,12 @@ class _AccountPageState extends State<AccountPage> {
 
   Future<void> _logout(BuildContext context) async {
     await FirebaseAuth.instance.signOut();
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => LoginScreen()),
-    );
+    if (context.mounted) {
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute(builder: (context) => const AuthGate()),
+            (route) => false, // 이전 모든 화면 제거
+      );
+    }
   }
 
   @override

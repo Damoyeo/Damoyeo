@@ -1,7 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import '../tab/postList/postList_page.dart';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -31,7 +30,6 @@ class _LoginScreenState extends State<LoginScreen> {
           email: emailController.text.trim(),
           password: passwordController.text.trim(),
         );
-        print('로그인 성공: ${userCredential.user?.uid}');
       } else {
         // 회원가입 모드
         userCredential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
@@ -39,7 +37,7 @@ class _LoginScreenState extends State<LoginScreen> {
           password: passwordController.text.trim(),
         );
 
-        // Firestore에 사용자 정보 저장
+        // 회원가입이 성공한 후 Firestore에 추가 정보 저장
         await FirebaseFirestore.instance.collection('users').doc(userCredential.user!.uid).set({
           'user_name': nameController.text.trim(),
           'user_nickname': nicknameController.text.trim(),
@@ -48,24 +46,19 @@ class _LoginScreenState extends State<LoginScreen> {
           'user_createdAt': FieldValue.serverTimestamp(),
           'user_postCount': 0,
         });
-        print('회원가입 성공: ${userCredential.user?.uid}');
       }
 
-      // 인증 성공 시 PostListPage로 이동
+      // 인증 성공 시 다음 화면으로 이동하거나 처리 추가
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(isLoginMode ? '로그인 성공!' : '회원가입 성공!')),
+        SnackBar(content: Text(isLoginMode ? '로그인 성공' : '회원가입 성공')),
       );
-      if (context.mounted) {
-        Navigator.of(context).pushReplacementNamed('/postList'); // PostListPage로 이동
-      }
     } catch (error) {
-      print('인증 중 오류 발생: $error');
+      // 오류 발생 시 처리
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('오류가 발생했습니다: $error')),
       );
     }
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -109,7 +102,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   obscureText: true,
                   validator: (value) {
                     if (value == null || value.length < 6) {
-                      return 'Password must be at least 6 characters';
+                      return '비밀번호는 최소 6자 이상이어야 합니다.';
                     }
                     return null;
                   },
