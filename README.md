@@ -99,6 +99,9 @@ Flutter를 사용하여 Android 및 iOS 환경에서 일관된 사용자 경험 
 
 ## 설치
 
+### APK 설치 링크
+- https://drive.google.com/file/d/13BdfWBM-B9yPfdYrw-RudKckxBGWlNJt/view?usp=sharing
+
 ### 요구사항
 - Flutter SDK: 2.17.0 이상 < 3.0.0
 - Android Studio
